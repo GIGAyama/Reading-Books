@@ -850,7 +850,7 @@ select.input{
    0. 定数
    ============================================================ */
 var APP_ID      = 'reading-books';   // 学習ログの appId（仕様書 §3.1）
-var APP_VERSION = '2.1.0';
+var APP_VERSION = '2.2.0';
 
 /* このアプリ専用の保存キー。
    `study.records.v1`（共通の学習ログ）は【ここに含めない】。
@@ -1170,6 +1170,21 @@ function unitForBook(book) {
   return { id: 'custom-' + djb2(normalizeTitle(book.title)), title: book.title, preset: false };
 }
 
+/**
+ * かんそうを ext に のせるための ととのえ（仕様書 §2.11 / §4）。
+ * 児童が じぶんの ことばで 書いた 本の かんそうは、先生が「みんなの本だな」で
+ * おすすめとして つかいます。ただし ext に 入れられるのは
+ * 児童を 見わけられない ないようだけなので、つぎを かならず とおします。
+ *
+ * - 改行・タブは 1つの スペースに つぶす（表・CSV に そのまま のせられるように）
+ * - 200文字で 切る（入力欄の 上限と そろえる。ext 全体 8KB のうち ごく一部）
+ * - 空文字は のせない（ext を むだに ふくらませない）
+ */
+function sanitizeMemo(memo) {
+  var text = String(memo == null ? '' : memo).replace(/[\s　]+/g, ' ').trim();
+  return text ? text.slice(0, 200) : null;
+}
+
 var Study = {
   session: null,
 
@@ -1229,6 +1244,9 @@ var Study = {
         priceYen: book.price,
         rating: book.rating,
         isbn: book.isbn || null,
+        // かんそうは 書いたときだけ のせる。★の たかい かんそうは
+        // 先生の 画面で「みんなの本だな」の おすすめとして つかわれます
+        memo: sanitizeMemo(book.memo),
         lookup: s.lookup,                 // 'auto' 自動取得 / 'manual' 手入力 / 'none'
         monthKey: y + '-' + pad2(m),
         monthlyBooks: monthLogs.length,
