@@ -1,996 +1,2666 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>どくしょ　ちょきんばこ</title>
-    <!-- 外部ライブラリの読み込み -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --app-bg: #FFFAF0;
-            --header-bg: #FFCCBC;
-            --header-gradient: linear-gradient(180deg, #FFCCBC 0%, #FFAB91 100%);
-            --border-color: #FFAB91;
-            --text-main: #D84315;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>どくしょ ちょきんばこ</title>
+<meta name="description" content="よんだ本を バーコードで きろくして、さつ数・ページ数・きんがくを ためていく どくしょノートです。">
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: var(--app-bg);
-            color: #4E342E;
-            font-family: 'Zen Maru Gothic', sans-serif;
-            -webkit-text-size-adjust: 100%;
-        }
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFAB91">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="icons/favicon-64.png" sizes="64x64" type="image/png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+<!-- iOS(Safari)から「ホーム画面に追加」したときにアプリとして起動するための指定 -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="どくしょちょきん">
+<meta name="format-detection" content="telephone=no">
 
-        /* --- メインコンテナ（縦長固定・レスポンシブ対応） --- */
-        .app-container {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            width: 100%;
-            height: 100%;
-            max-width: 420px; /* 常にスマホ幅で固定 */
-            margin: 0 auto;
-            background-color: white;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            padding-top: max(10px, env(safe-area-inset-top, 10px));
-            border-left: 1px solid #EEE;
-            border-right: 1px solid #EEE;
-        }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" media="print" onload="this.media='all'">
 
-        header {
-            background: var(--header-gradient);
-            padding: 0.35rem 0.75rem;
-            text-align: center;
-            flex-shrink: 0;
-            border-bottom: 3px solid var(--border-color);
-            box-shadow: 0 2px 10px rgba(216, 67, 21, 0.1);
-        }
+<style>
+/* ============================================================
+   どくしょ ちょきんばこ — スタイル
+   外部 CSS フレームワークに依存しない（オフラインでも同じ見た目）
+   ============================================================ */
+:root{
+  --bg:#FFF7EF;
+  --surface:#FFFFFF;
+  --surface-2:#FFF3E0;
+  --line:#FFCCBC;
+  --line-strong:#FFAB91;
+  --brand:#E64A19;
+  --brand-dark:#BF360C;
+  --brand-soft:#FFAB91;
+  --ink:#4E342E;
+  --ink-soft:#8D6E63;
+  --ink-faint:#B0A099;
+  --blue:#0288D1;
+  --blue-soft:#4FC3F7;
+  --blue-bg:#E1F5FE;
+  --green:#2E7D32;
+  --gold:#F9A825;
+  --danger:#D32F2F;
 
-        .fancy-title {
-            font-size: 1.55rem;
-            color: var(--text-main);
-            font-weight: 900;
-            text-shadow: 2px 2px 0px white, -1px -1px 0px white, 1px -1px 0px white, -1px 1px 0px white, 3px 3px 5px rgba(216, 67, 21, 0.3);
-            letter-spacing: 0.05em;
-        }
+  --radius-lg:20px;
+  --radius:14px;
+  --radius-sm:10px;
+  --shadow:0 2px 8px rgba(120,60,20,.10);
+  --shadow-lg:0 10px 30px rgba(120,60,20,.22);
 
-        .bounce-icon {
-            display: inline-block;
-            animation: welcome-bounce 1.2s ease-out 1;
-        }
-        @keyframes welcome-bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-8px) rotate(-5deg); }
-            60% { transform: translateY(-4px) rotate(5deg); }
-        }
+  --header-h:52px;
+  --nav-h:64px;
+  --safe-top:env(safe-area-inset-top, 0px);
+  --safe-bottom:env(safe-area-inset-bottom, 0px);
+  --safe-left:env(safe-area-inset-left, 0px);
+  --safe-right:env(safe-area-inset-right, 0px);
 
-        /* --- タブ管理 --- */
-        .tab-content { display: none; height: 100%; overflow: hidden; }
-        .tab-content.active { display: flex; flex-direction: column; }
-        #tab-log, #tab-stamp { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  --fs-body:15px;
+  --content-max:1100px;
+}
 
-        /* ホーム画面レイアウト */
-        #tab-home.active { 
-            justify-content: stretch; 
-            padding: 0;
-            overflow-y: hidden;
-            gap: 0;
-            flex-direction: column; /* 常に縦並び */
-        }
+*,*::before,*::after{box-sizing:border-box}
+/* hidden 属性を かならず きかせる（.card などの display 指定に まけないように） */
+[hidden]{display:none!important}
 
-        /* セクション分割設定 */
-        .section-half {
-            flex: 1;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-            padding: 0.35rem;
-            box-sizing: border-box;
-            overflow: hidden;
-            height: 50%;
-            width: 100%;
-        }
+html,body{
+  margin:0;padding:0;height:100%;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Zen Maru Gothic','Hiragino Maru Gothic ProN','ヒラギノ丸ゴ ProN W4',
+              'Rounded Mplus 1c','Hiragino Kaku Gothic ProN','Noto Sans JP',
+              system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:var(--fs-body);
+  font-weight:700;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+  /* ブラウザの左右スワイプ（履歴移動）・引っぱって更新を抑える */
+  overscroll-behavior:none;
+  touch-action:pan-y;
+}
+body{
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none;padding:0;touch-action:manipulation}
+h1,h2,h3,p,ul,ol{margin:0}
+ul{padding:0;list-style:none}
+:focus-visible{outline:3px solid #FF7043;outline-offset:2px}
 
-        /* --- 貯金箱エリア --- */
-        .chokin-card {
-            background-color: #FFF3E0;
-            border-radius: 1rem;
-            border: 2px solid #FFB74D;
-            padding: 0.4rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
+/* ---------- アプリの骨格 ---------- */
+.app{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  background:var(--bg);
+  padding-left:var(--safe-left);padding-right:var(--safe-right);
+}
 
-        .chokin-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-        }
+.app-header{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:8px;
+  min-height:var(--header-h);
+  padding:calc(var(--safe-top) + 4px) 10px 4px;
+  background:linear-gradient(180deg,#FFD9C7 0%,#FFAB91 100%);
+  border-bottom:3px solid var(--line-strong);
+  box-shadow:0 2px 10px rgba(216,67,21,.12);
+  position:relative;z-index:20;
+}
+.app-title{
+  flex:1;min-width:0;
+  text-align:center;
+  font-size:clamp(15px,4.3vw,26px);font-weight:900;
+  color:var(--brand-dark);
+  text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  letter-spacing:.02em;
+}
+.hdr-slot{flex:0 0 auto;min-width:44px;display:flex;align-items:center}
+.hdr-slot.right{justify-content:flex-end}
+.hdr-btn{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:6px 10px;border-radius:999px;
+  background:rgba(255,255,255,.92);color:var(--brand-dark);
+  font-size:12px;font-weight:900;box-shadow:var(--shadow);
+  border:2px solid #fff;
+}
+.hdr-btn:active{transform:scale(.95)}
 
-        .chokin-box {
-            flex: 1;
-            background-color: white;
-            border-radius: 0.7rem;
-            border: 2.5px solid #FFB74D;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 0;
-            padding: 2px 4px;
-            overflow: hidden;
-        }
+/* ---------- 画面 ---------- */
+.screens{position:relative;flex:1 1 auto;min-height:0;overflow:hidden}
+.screen{
+  position:absolute;inset:0;
+  display:none;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding:10px 10px calc(14px + var(--safe-bottom));
+}
+.screen.is-active{display:block}
+.screen.fill{padding:0;overflow:hidden}
+.wrap{max-width:var(--content-max);margin:0 auto;display:flex;flex-direction:column;gap:10px}
 
-        .chokin-label { 
-            font-size: clamp(12px, 2.2vh, 15px); 
-            font-weight: 900; 
-            color: #5D4037; 
-            line-height: 1.1; 
-            margin-top: 6px;
-            margin-bottom: 2px;
-            white-space: nowrap;
-        }
-        
-        .chokin-value-row { 
-            display: flex; 
-            align-items: baseline; 
-            gap: 3px; 
-            margin-top: -2px;
-            margin-bottom: 4px;
-        }
-        .chokin-value { font-size: clamp(24px, 4.5vh, 46px); font-weight: 900; color: #E64A19; line-height: 1; }
-        .chokin-unit { font-size: clamp(11px, 1.6vh, 16px); font-weight: 900; color: #8D6E63; }
+@keyframes slide-fwd{from{opacity:.3;transform:translateX(16%)}to{opacity:1;transform:none}}
+@keyframes slide-back{from{opacity:.3;transform:translateX(-16%)}to{opacity:1;transform:none}}
+.screen.anim-fwd{animation:slide-fwd .22s ease-out}
+.screen.anim-back{animation:slide-back .22s ease-out}
+@media (prefers-reduced-motion:reduce){
+  .screen.anim-fwd,.screen.anim-back{animation:none}
+  *{scroll-behavior:auto!important}
+}
 
-        .home-action-buttons {
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            margin-top: 0.3rem;
-        }
+/* ---------- カード・共通パーツ ---------- */
+.card{
+  background:var(--surface);
+  border:2px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:12px;
+  box-shadow:var(--shadow);
+}
+.card.soft{background:var(--surface-2);border-color:#FFB74D}
+.card.blue{background:var(--blue-bg);border-color:var(--blue-soft)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.card-title{font-size:15px;font-weight:900;color:#E65100}
+.card.blue .card-title{color:var(--blue)}
+.muted{color:var(--ink-soft);font-size:12px;font-weight:700}
+.tiny{font-size:11px}
+.center{text-align:center}
+.row{display:flex;align-items:center;gap:8px}
+.row.wrap{flex-wrap:wrap}
+.spacer{flex:1}
+.stack{display:flex;flex-direction:column;gap:8px}
+.divider{height:2px;background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 16px);border:0;margin:10px 0}
 
-        .btn-clear {
-            display: flex; align-items: center; justify-content: center; gap: 4px;
-            border-radius: 0.5rem; font-weight: 900; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: all 0.1s;
-        }
-        .btn-clear:active { transform: scale(0.97); }
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:12px 14px;border-radius:var(--radius);
+  font-weight:900;font-size:15px;line-height:1.25;
+  background:var(--surface);color:var(--ink);
+  border:2px solid var(--line);
+  box-shadow:0 2px 0 rgba(0,0,0,.06);
+  transition:transform .08s ease;
+  min-height:48px;text-align:center;
+}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.block{width:100%}
+.btn-primary{background:#FF7043;color:#fff;border-color:#E64A19;border-bottom:4px solid #BF360C}
+.btn-blue{background:#29B6F6;color:#fff;border-color:#0288D1;border-bottom:4px solid #01579B}
+.btn-green{background:#4CAF50;color:#fff;border-color:#2E7D32;border-bottom:4px solid #1B5E20}
+.btn-purple{background:#9575CD;color:#fff;border-color:#7E57C2;border-bottom:4px solid #5E35B1}
+.btn-ghost{background:#fff;color:var(--blue);border-color:var(--blue-soft)}
+.btn-danger{background:#EF5350;color:#fff;border-color:#C62828;border-bottom:4px solid #8E1D1D}
+.btn-xl{font-size:18px;padding:16px;min-height:62px}
+.btn-sm{font-size:12px;padding:7px 11px;min-height:0;border-radius:999px}
+.btn-icon{font-size:1.35em;line-height:1}
 
-        /* --- カメラエリア --- */
-        #interactive.viewport {
-            position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden;
-            border-radius: 0.8rem; background-color: #E3F2FD; display: flex;
-            justify-content: center; align-items: center; border: 2px solid #FFF; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
-        #interactive.viewport video { position: absolute; width: 100% !important; height: 100% !important; object-fit: cover; z-index: 10; }
-        #scanner-cover { position: absolute; inset: 0; background-color: #E1F5FE; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; }
-        #success-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:999px;
+  background:#FFE0D5;color:var(--brand);
+  font-size:11px;font-weight:900;white-space:nowrap;
+}
+.chip.blue{background:#D5EEFB;color:var(--blue)}
+.chip.gold{background:#FFF0C2;color:#8D6E00}
+.chip.gray{background:#EFEAE6;color:var(--ink-soft)}
 
-        /* スキャン用ガイド */
-        .scan-frame {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 80%; height: 60%; z-index: 30; pointer-events: none;
-        }
-        .scan-corner { position: absolute; width: 10px; height: 10px; border-color: #FF5252; border-style: solid; border-width: 0; }
-        .tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-radius: 3px 0 0 0; }
-        .tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-radius: 0 3px 0 0; }
-        .bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 3px; }
-        .br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 3px 0; }
-        
-        .scan-line {
-            position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
-            background-color: #FF1744; box-shadow: 0 0 4px #FF1744; z-index: 31;
-            animation: scan-move 2s infinite ease-in-out;
-        }
-        @keyframes scan-move {
-            0% { top: 20%; opacity: 0.3; }
-            50% { top: 50%; opacity: 1; }
-            100% { top: 80%; opacity: 0.3; }
-        }
+label.field{display:block;margin-bottom:10px}
+label.field > span{display:block;font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:3px}
+.input{
+  width:100%;padding:11px 12px;
+  background:#fff;border:2px solid var(--line);border-radius:var(--radius-sm);
+  font-size:16px;font-weight:900;color:var(--ink);outline:none;
+}
+.input:focus{border-color:var(--brand-soft);box-shadow:0 0 0 3px rgba(255,171,145,.35)}
+.input.error{border-color:#EF4444;background:#FEF2F2;box-shadow:0 0 0 3px rgba(239,68,68,.25)}
+textarea.input{resize:vertical;min-height:70px;font-weight:700}
+select.input{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--brand-soft) 50%),linear-gradient(135deg,var(--brand-soft) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:30px}
+/* font-size は 16px 未満にしない（iOS で 入力時に かってに ズームするため） */
+.select-sm{padding:6px 26px 6px 10px;font-size:16px;border-radius:999px;width:auto;color:var(--brand)}
 
-        .nav-btn.active { color: #FF7043; background: #FFF0F0; border-top: 4px solid #FF7043; }
+/* ---------- ホーム：ちょきんばこ ---------- */
+.bank-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.bank-box{
+  background:#fff;border:3px solid #FFB74D;border-radius:var(--radius);
+  padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.bank-label{font-size:13px;font-weight:900;color:#5D4037}
+.bank-num{display:flex;align-items:baseline;gap:3px}
+.bank-value{font-size:clamp(28px,7vw,44px);font-weight:900;color:#E64A19;line-height:1;font-variant-numeric:tabular-nums}
+.bank-unit{font-size:13px;font-weight:900;color:var(--ink-soft)}
 
-        /* --- 共通・リスト・スタンプ --- */
-        .unified-header-row {
-            display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;
-            padding: 0.3rem 0.6rem; background: white; border-radius: 0.8rem; border: 2px solid #FFCCBC;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-wrap: nowrap; white-space: nowrap; flex-shrink: 0;
-        }
-        .unified-summary-box { display: flex; align-items: center; gap: 2px; padding-left: 0.4rem; border-left: 2px solid #FFAB91; }
-        .list-guide-msg {
-            background-color: #FFF9C4; color: #795548; font-size: 10px; font-weight: 900;
-            text-align: center; padding: 4px; border-radius: 6px; margin-top: 4px; border: 1px dashed #FFD54F;
-        }
-        .date-selectors { display: flex; gap: 0.2rem; align-items: center; flex-wrap: nowrap; justify-content: center; }
-        select {
-            appearance: none; background-color: white; border: 2px solid #FFAB91; border-radius: 6px;
-            padding: 1px 6px; font-weight: bold; color: #D84315; font-size: 12px; outline: none; cursor: pointer;
-        }
-        .goal-input {
-            width: 38px; text-align: center; font-weight: 900; color: #FF7043; font-size: 1rem;
-            background: #FFF; border: 2px solid #FFAB91; border-radius: 6px; outline: none; padding: 1px 0;
-        }
-        .stamp-grid {
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;
-            background-color: white; padding: 5px; border-radius: 0.7rem; border: 2px solid #FFCCBC;
-        }
-        .stamp-cell {
-            aspect-ratio: 1; border: 1px dashed #FFCCBC; border-radius: 0.3rem;
-            display: flex; align-items: center; justify-content: center; font-size: 34px; line-height: 1;
-            background-color: #FFFAF0; overflow: hidden;
-        }
-        .stamp-cell.filled { border-style: solid; background-color: #FFF0F0; animation: stamp-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .section-title-top { font-size: 0.8rem; font-weight: 900; color: #E65100; }
-        .current-date-title { font-size: 1.05rem; font-weight: 900; color: #D84315; margin-top: 0.2rem; text-align: center; }
+.progress{height:14px;background:#F1E9E3;border-radius:999px;overflow:hidden;border:2px solid #EADFD7}
+.progress > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#FFAB91,#FF7043);transition:width .6s cubic-bezier(.22,1,.36,1)}
+.progress > span.gold{background:linear-gradient(90deg,#FFD54F,#F9A825);box-shadow:0 0 10px rgba(249,168,37,.7)}
+.progress-marks{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:3px}
 
-        /* 通知メッセージ */
-        #notice-msg {
-            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(200%);
-            background: rgba(62, 39, 35, 0.95); color: white;
-            padding: 12px 24px; font-size: 14px; text-align: center; font-weight: bold;
-            z-index: 10000; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border-radius: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            width: auto; min-width: 200px;
-            opacity: 0; visibility: hidden; pointer-events: none;
-        }
-        #notice-msg.show { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
-        
-        /* エラー時の赤枠 */
-        .input-error { border-color: #EF4444 !important; background-color: #FEF2F2 !important; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3); }
+/* ---------- 本のリスト ---------- */
+/* minmax(0,1fr) にしないと、中身が ちぢまず 列が はみ出す */
+.book-list{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.book-item{
+  display:flex;align-items:stretch;gap:8px;
+  background:#fff;border:2px solid #F0E4DC;border-radius:var(--radius);
+  padding:9px 10px;box-shadow:var(--shadow);
+  text-align:left;width:100%;min-width:0;
+}
+.book-item:active{transform:scale(.99)}
+.book-main{flex:1;min-width:0}
+.book-top{display:flex;align-items:center;gap:6px;margin-bottom:2px;min-width:0}
+.book-title{min-width:0;flex:1}
+.book-title{font-size:14px;font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-sub{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-soft);min-width:0}
+.book-author{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.book-figs{color:var(--blue);font-weight:900;white-space:nowrap}
+.book-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:4px}
+.stars{display:flex;gap:1px;font-size:19px}
+.star{font-size:1em;line-height:1;color:#E4DCD6;padding:1px}
+.star.on{color:#FFB800}
+.empty-state{padding:40px 16px;text-align:center;color:var(--ink-faint);font-weight:900;grid-column:1/-1}
+#recent-list{grid-template-columns:1fr}
+.empty-state .big{font-size:42px;display:block;margin-bottom:8px}
 
-        /* ロードエラー時の表示 */
-        #load-error-msg {
-            position: fixed; inset: 0; background: white; z-index: 99999;
-            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;
-        }
+.seg{display:inline-flex;background:#F3E9E2;border-radius:999px;padding:3px;gap:2px}
+.seg button{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:900;color:var(--ink-soft)}
+.seg button.on{background:#fff;color:var(--brand);box-shadow:var(--shadow)}
 
-        /* 達成時のプログレスバー */
-        .progress-gold {
-            background: linear-gradient(to right, #FFD700, #FDB931) !important;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-        }
-    </style>
+/* ---------- スタンプ ---------- */
+.stamp-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:5px;
+  background:#fff;padding:8px;border-radius:var(--radius);border:2px solid var(--line);
+}
+.stamp-cell{
+  aspect-ratio:1;border:2px dashed var(--line);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(22px,5vw,32px);line-height:1;background:#FFFAF0;overflow:hidden;
+}
+.stamp-cell.filled{border-style:solid;background:#FFF0F0;animation:pop .3s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ---------- カメラ ---------- */
+.scan-screen{display:flex;flex-direction:column;height:100%;background:#0E1114}
+.scan-stage{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;background:#0E1114;display:flex;align-items:center;justify-content:center}
+.scan-stage video,.scan-stage canvas.drawingBuffer{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:cover}
+.scan-stage canvas.drawingBuffer{opacity:0}
+.scan-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#B3E5FC;text-align:center;padding:20px;z-index:6}
+.scan-frame{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(84%,520px);height:min(46%,260px);z-index:30;pointer-events:none}
+.scan-corner{position:absolute;width:26px;height:26px;border:0 solid #FF5252}
+.scan-corner.tl{top:0;left:0;border-top-width:5px;border-left-width:5px;border-radius:6px 0 0 0}
+.scan-corner.tr{top:0;right:0;border-top-width:5px;border-right-width:5px;border-radius:0 6px 0 0}
+.scan-corner.bl{bottom:0;left:0;border-bottom-width:5px;border-left-width:5px;border-radius:0 0 0 6px}
+.scan-corner.br{bottom:0;right:0;border-bottom-width:5px;border-right-width:5px;border-radius:0 0 6px 0}
+.scan-line{position:absolute;left:6%;width:88%;height:3px;background:#FF1744;box-shadow:0 0 8px #FF1744;border-radius:3px;animation:scan-move 2.1s infinite ease-in-out}
+@keyframes scan-move{0%{top:12%;opacity:.35}50%{top:50%;opacity:1}100%{top:88%;opacity:.35}}
+.scan-hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:#fff;font-size:13px;font-weight:900;text-shadow:0 2px 6px rgba(0,0,0,.8);z-index:31;padding:0 16px}
+.scan-ok{position:absolute;inset:0;background:rgba(255,255,255,.94);display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:60}
+.scan-ok.show{display:flex}
+.scan-bar{flex:0 0 auto;display:flex;gap:8px;padding:10px;background:#151A1F}
+.scan-bar .btn{flex:1}
+
+/* ---------- ふりかえり（グラフ） ---------- */
+.bars{display:flex;align-items:flex-end;gap:5px;height:130px;padding:6px 2px 0;overflow-x:auto}
+.bar-col{flex:1 0 26px;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end}
+.bar{width:100%;min-height:3px;background:linear-gradient(180deg,#FFAB91,#FF7043);border-radius:6px 6px 0 0;transition:height .5s ease}
+.bar.now{background:linear-gradient(180deg,#FFD54F,#F9A825)}
+.bar-cap{font-size:10px;color:var(--ink-soft);white-space:nowrap}
+.bar-val{font-size:11px;font-weight:900;color:var(--brand)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.kpi{background:#fff;border:2px solid var(--line);border-radius:var(--radius);padding:9px;text-align:center}
+.kpi b{display:block;font-size:22px;color:var(--brand);line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi span{font-size:11px;color:var(--ink-soft)}
+
+/* ---------- メニュー行 ---------- */
+.menu{display:grid;grid-template-columns:1fr;gap:8px}
+.menu-item{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  background:#fff;border:2px solid var(--line);border-radius:var(--radius);
+  padding:13px 14px;box-shadow:var(--shadow);min-height:60px;
+}
+.menu-item:active{transform:scale(.99)}
+.menu-emoji{font-size:26px;line-height:1;flex:0 0 auto}
+.menu-text{flex:1;min-width:0}
+.menu-text b{display:block;font-size:15px;font-weight:900}
+.menu-text span{font-size:11px;color:var(--ink-soft);font-weight:700}
+.menu-arrow{color:var(--line-strong);font-size:18px;font-weight:900}
+.menu-item.danger{border-color:#FFCDD2}
+.menu-item.danger .menu-text b{color:var(--danger)}
+
+/* ---------- 下のナビゲーション ---------- */
+.app-nav{
+  flex:0 0 auto;z-index:30;
+  background:#fff;border-top:3px solid var(--line);
+  padding-bottom:var(--safe-bottom);
+  box-shadow:0 -2px 12px rgba(120,60,20,.08);
+}
+.nav-tabs{display:flex;align-items:stretch;height:var(--nav-h)}
+.nav-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  color:var(--ink-soft);border-top:4px solid transparent;margin-top:-3px;
+}
+.nav-tab .ico{font-size:22px;line-height:1.1}
+.nav-tab .lbl{font-size:10px;font-weight:900}
+.nav-tab.on{color:#FF7043;background:#FFF3EE;border-top-color:#FF7043}
+.nav-back{
+  display:none;width:100%;height:var(--nav-h);
+  align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(180deg,#FFF3EE,#FFE1D5);
+  color:var(--brand-dark);font-size:17px;font-weight:900;
+}
+.nav-back .arrow{font-size:22px}
+.nav-back:active{background:#FFD8C8}
+.app-nav[data-mode="back"] .nav-tabs{display:none}
+.app-nav[data-mode="back"] .nav-back{display:flex}
+
+/* ---------- 端スワイプ（戻る）の目印 ---------- */
+.edge-hint{
+  position:fixed;top:50%;width:56px;height:56px;margin-top:-28px;
+  border-radius:50%;background:rgba(216,67,21,.92);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;
+  z-index:900;pointer-events:none;opacity:0;box-shadow:var(--shadow-lg);
+}
+.edge-hint.left{left:0;transform:translateX(-100%)}
+.edge-hint.right{right:0;transform:translateX(100%)}
+
+/* ---------- トースト・ダイアログ・演出 ---------- */
+#toast{
+  position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--safe-bottom) + 16px);
+  transform:translate(-50%,140%);
+  background:rgba(62,39,35,.96);color:#fff;
+  padding:12px 22px;border-radius:999px;font-size:14px;font-weight:900;text-align:center;
+  max-width:min(88vw,420px);z-index:1200;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:transform .35s cubic-bezier(.175,.885,.32,1.275),opacity .25s;
+  box-shadow:var(--shadow-lg);
+}
+#toast.show{transform:translate(-50%,0);opacity:1;visibility:visible}
+
+.dialog-back{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(30,15,8,.62);
+  display:flex;align-items:center;justify-content:center;padding:18px;
+  padding-bottom:calc(18px + var(--safe-bottom));
+}
+.dialog{
+  background:#fff;border-radius:24px;border:4px solid var(--line);
+  padding:22px;width:100%;max-width:400px;text-align:center;box-shadow:var(--shadow-lg);
+  animation:dlg-in .2s ease-out;
+}
+@keyframes dlg-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.dialog.danger{border-color:#FFCDD2}
+.dialog .dlg-emoji{font-size:44px;display:block;margin-bottom:8px}
+.dialog h3{font-size:19px;font-weight:900;margin-bottom:8px;line-height:1.4}
+.dialog p{font-size:13px;color:var(--ink-soft);line-height:1.65;margin-bottom:16px}
+.dialog .dlg-btns{display:flex;gap:10px}
+.dialog .dlg-btns .btn{flex:1}
+
+#fx{position:fixed;inset:0;pointer-events:none;z-index:1100;display:none}
+
+.celebrate{
+  position:fixed;inset:0;z-index:1150;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;padding:20px;
+}
+.celebrate .box{
+  background:rgba(255,255,255,.96);border:4px solid #FF7043;border-radius:32px;
+  padding:26px 34px;text-align:center;box-shadow:var(--shadow-lg);
+  animation:pop .4s cubic-bezier(.175,.885,.32,1.275);
+}
+.celebrate .box .big{font-size:56px;display:block;margin-bottom:6px}
+.celebrate .box b{font-size:20px;color:#FF5722}
+
+/* ---------- 大きい画面（タブレット・PC）---------- */
+@media (min-width:640px){
+  :root{--fs-body:16px;--header-h:58px;--nav-h:70px}
+  .screen{padding:14px 16px calc(18px + var(--safe-bottom))}
+  .wrap{gap:14px}
+  .card{padding:16px;border-radius:24px}
+  .bank-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .bank-box{flex-direction:column;justify-content:center;gap:2px;padding:14px 8px;text-align:center}
+  .book-list{grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+  .stamp-grid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px}
+  .nav-tab .lbl{font-size:12px}
+  .nav-tab .ico{font-size:26px}
+}
+@media (min-width:960px){
+  .home-cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:14px;align-items:start}
+  .home-cols > .stack{gap:14px}
+  .app-title{font-size:24px}
+}
+/* 横向きのスマホなど、たてが短い端末 */
+@media (max-height:460px) and (orientation:landscape){
+  :root{--header-h:40px;--nav-h:52px}
+  .app-title{font-size:16px}
+  .btn-xl{min-height:50px;font-size:16px;padding:11px}
+  .bank-value{font-size:26px}
+}
+@media (display-mode:standalone){
+  .install-only{display:none!important}
+}
+</style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-    <div id="load-error-msg">
-        <p class="text-4xl mb-4">😢</p>
-        <h2 class="text-xl font-bold text-red-500 mb-2">プログラムが よみこめませんでした</h2>
-        <p class="text-sm text-gray-600">インターネットに つながっているか<br>かくにん してください。</p>
-        <button onclick="location.reload()" class="mt-6 px-6 py-3 bg-blue-500 text-white rounded-xl font-bold shadow-md">もういちど やってみる</button>
+<div class="app" id="app">
+
+  <header class="app-header">
+    <div class="hdr-slot">
+      <button class="hdr-btn" id="hdr-back" hidden aria-label="まえのがめんに もどる">◀ もどる</button>
     </div>
-
-    <div class="app-container">
-        <header>
-            <h1 class="fancy-title flex items-center justify-center gap-3 leading-none">
-                <span class="text-3xl bounce-icon">📖</span> どくしょ　ちょきんばこ
-            </h1>
-        </header>
-
-        <!-- 【ホーム】 -->
-        <main id="tab-home" class="tab-content active flex-1">
-            <div class="section-half">
-                <div class="chokin-card">
-                    <div class="flex justify-between items-center mb-1 shrink-0 px-1">
-                        <h3 class="section-title-top">いままでによんだほんのちょきん</h3>
-                        <button onclick="showResetConfirm()" class="px-2 py-0.5 bg-white border border-red-400 rounded-full text-[8px] font-black text-red-500 active:scale-95 shadow-sm">♻️ リセット</button>
-                    </div>
-                    
-                    <div class="chokin-grid">
-                        <div class="chokin-box">
-                            <span class="chokin-label">よんだ本のかず</span>
-                            <div class="chokin-value-row">
-                                <span class="chokin-value" id="total-books-count">0</span>
-                                <span class="chokin-unit">さつ</span>
-                            </div>
-                        </div>
-                        <div class="chokin-box">
-                            <span class="chokin-label">よんだページのごうけい</span>
-                            <div class="chokin-value-row">
-                                <span class="chokin-value" id="total-pages-count">0</span>
-                                <span class="chokin-unit">ページ</span>
-                            </div>
-                        </div>
-                        <div class="chokin-box">
-                            <span class="chokin-label">よんだ本のごうけいきんがく</span>
-                            <div class="chokin-value-row">
-                                <span class="chokin-value" id="total-price-count">0</span>
-                                <span class="chokin-unit">えん</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="home-action-buttons">
-                        <button id="btn-copy" onclick="copyForSpreadsheet()" class="btn-clear w-full py-1 bg-[#4CAF50] text-white text-[10px] border-b-2 border-[#2E7D32]">
-                            📊 表(ひょう)にするためのコピー
-                        </button>
-                        <div class="flex gap-1 relative">
-                            <button onclick="saveDataFile()" class="btn-clear flex-1 py-1.5 bg-[#42A5F5] text-white text-[9px] border-b-2 border-[#1E88E5]">💾 データをのこす(ほぞん)</button>
-                            <!-- 修正箇所：ボタン風の見た目の中に、透明なinputを配置（スマホ対応） -->
-                            <div class="btn-clear flex-1 py-1.5 bg-[#9575CD] text-white text-[9px] border-b-2 border-[#7E57C2] relative text-center flex items-center justify-center cursor-pointer">
-                                📖 のこしたデータをよむ
-                                <input type="file" id="file-input" accept=".json" onchange="loadDataFile(this)" 
-                                       style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 50;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section-half">
-                <div class="bg-[#E1F5FE] rounded-[1rem] p-2 border-2 border-solid border-[#4FC3F7] flex flex-col relative flex-1 min-h-0">
-                    <div class="flex w-full justify-between items-center mb-1 shrink-0">
-                        <p class="text-[0.8rem] font-black text-[#0288D1]">バーコードよみとりカメラ</p>
-                        <button onclick="showHelp()" class="px-2 py-0.5 bg-white border border-[#4FC3F7] rounded-full text-[8px] font-black text-[#0288D1] active:scale-95 shadow-sm">❓ つかいかた</button>
-                    </div>
-
-                    <div id="interactive" class="viewport shadow-sm relative flex-1">
-                        <div id="scanner-cover">
-                            <svg class="w-8 h-8 text-blue-300" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M4 4h3l2-2h6l2 2h3a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm10 7a2 2 0 10-4 0 2 2 0 004 0zm2 0a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                        </div>
-                        <div id="guide-box" class="scan-frame hidden">
-                            <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
-                            <div class="scan-corner bl"></div><div class="scan-corner br"></div>
-                            <div class="scan-line"></div>
-                        </div>
-                        <div id="success-overlay">
-                            <div class="text-3xl animate-bounce">✅</div>
-                            <p class="font-bold text-blue-600 text-xs">よめました！</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex w-full gap-2 mt-2 shrink-0">
-                        <button onclick="toggleScanner()" class="flex-[1] h-11 bg-[#29B6F6] hover:bg-[#039BE5] text-white rounded-[0.8rem] font-black text-[11px] shadow border-b-4 border-[#0277BD] flex flex-col items-center justify-center leading-tight">
-                            <span class="text-base">📷</span> 
-                            <span id="btn-text">カメラでバーコードをよむ</span>
-                        </button>
-                        <button onclick="showManualModal('')" class="flex-[1] h-11 bg-white border-2 border-[#29B6F6] text-[#0277BD] rounded-[0.8rem] flex flex-col items-center justify-center active:scale-95 min-w-[65px] shadow-sm leading-tight">
-                            <span class="text-base">🔢</span>
-                            <span class="text-[10px] font-black">本のばんごうをいれる</span>
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-gray-400 text-center mt-2 font-bold shrink-0">
-                        ©2026　どくしょ　ちょきんばこ　ＩＣＴ支援の杜
-                    </p>
-                </div>
-            </div>
-        </main>
-
-        <!-- 【リスト】 -->
-        <main id="tab-log" class="tab-content flex-1 p-3 gap-1 no-scrollbar overflow-y-auto">
-            <div class="unified-header-row shrink-0">
-                <div class="date-selectors">
-                    <select id="year-selector-log" onchange="syncDateAndRender(this.value, 'year')"></select>
-                    <select id="month-selector-log" onchange="syncDateAndRender(this.value, 'month')"></select>
-                </div>
-                <div class="unified-summary-box">
-                    <span class="text-[8px] font-black text-gray-400">こんげつよんだ本のかず:</span>
-                    <span class="text-base font-black text-[#E64A19]"><span id="log-monthly-books">0</span><span class="text-[10px] ml-0.5">さつ</span></span>
-                </div>
-            </div>
-            <div class="list-guide-msg">まちがえたときは「❌」をおすと けせるよ</div>
-            <div id="log-month-header" class="current-date-title"></div>
-            <div id="book-list" class="space-y-1 mt-1 pb-4"></div>
-        </main>
-
-        <!-- 【スタンプ】 -->
-        <main id="tab-stamp" class="tab-content flex-1 p-3 gap-1 no-scrollbar overflow-y-auto">
-            <div class="unified-header-row shrink-0">
-                <div class="date-selectors">
-                    <select id="year-selector-stamp" onchange="syncDateAndRender(this.value, 'year')"></select>
-                    <select id="month-selector-stamp" onchange="syncDateAndRender(this.value, 'month')"></select>
-                </div>
-                <div class="flex items-center gap-1 border-l-2 border-orange-100 pl-2">
-                    <span class="font-black text-[10px] text-[#5D4037]">もくひょう:</span>
-                    <input type="number" id="target-goal-input" class="goal-input" value="10" onchange="updateGoal(this.value)">
-                    <span class="text-[10px] font-black text-[#8D6E63]">さつ</span>
-                </div>
-            </div>
-            <div id="stamp-month-header" class="current-date-title"></div>
-            <div class="bg-white rounded-xl p-2 border-2 border-[#FFCCBC] shadow-sm mt-1">
-                <div class="flex justify-between items-center mb-1 px-1">
-                    <h2 class="font-black text-sm text-[#D84315]" id="stamp-month-title">スタンプ帳</h2>
-                    <span class="text-[10px] font-black text-gray-400" id="stamp-count-text">0 / 10</span>
-                </div>
-                <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden border border-gray-200 mb-2">
-                    <div id="goal-progress" class="bg-gradient-to-r from-[#FFAB91] to-[#FF7043] h-full transition-all duration-700" style="width: 0%"></div>
-                </div>
-                <div id="goal-markers" class="flex justify-between text-[9px] text-[#8D6E63] font-black px-1 mb-2"></div>
-                <div id="stamp-grid" class="stamp-grid"></div>
-            </div>
-        </main>
-
-        <!-- ナビゲーション -->
-        <nav class="bg-white border-t-2 border-[#FFCCBC] h-14 shrink-0 flex items-center justify-around pb-1">
-            <button onclick="switchTab('home')" id="nav-home" class="nav-btn active flex-1 flex flex-col items-center justify-center h-full">
-                <span class="text-xl">🏠</span><span class="text-[9px] font-black">ホーム</span>
-            </button>
-            <button onclick="switchTab('log')" id="nav-log" class="nav-btn flex-1 flex flex-col items-center justify-center h-full">
-                <span class="text-xl">📚</span><span class="text-[9px] font-black">リスト</span>
-            </button>
-            <button onclick="switchTab('stamp')" id="nav-stamp" class="nav-btn flex-1 flex flex-col items-center justify-center h-full">
-                <span class="text-xl">💮</span><span class="text-[9px] font-black">スタンプ</span>
-            </button>
-        </nav>
+    <h1 class="app-title" id="app-title">📖 どくしょ ちょきんばこ</h1>
+    <div class="hdr-slot right">
+      <button class="hdr-btn" id="hdr-help" data-act="go" data-screen="help" aria-label="つかいかた">❓</button>
     </div>
+  </header>
 
-    <!-- モーダル・確認画面 -->
-    <div id="reset-confirm-modal" class="fixed inset-0 hidden flex items-center justify-center p-4 z-[700] bg-black/80 text-left">
-        <div class="bg-white w-full max-w-sm rounded-[1.5rem] p-6 border-4 border-red-200 shadow-2xl text-center">
-            <p class="text-4xl mb-4">⚠️</p>
-            <h3 class="text-xl font-black text-red-600 mb-4 leading-relaxed">データをけします<br>ほんとうにいいですか</h3>
-            <div class="flex gap-3">
-                <button onclick="hideResetConfirm()" class="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl font-black text-lg shadow active:scale-95">やめる</button>
-                <button onclick="resetAllDataActual()" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-black text-lg shadow active:scale-95 border-b-4 border-red-700">けす！</button>
-            </div>
+  <div class="screens" id="screens">
+
+    <!-- ========== ホーム ========== -->
+    <section class="screen" data-screen="tab-home" aria-label="ホーム">
+      <div class="wrap">
+        <div class="home-cols">
+          <div class="stack">
+
+            <section class="card soft">
+              <div class="card-head">
+                <h2 class="card-title">🪙 いままでに よんだ本の ちょきん</h2>
+              </div>
+              <div class="bank-grid">
+                <div class="bank-box">
+                  <span class="bank-label">よんだ本のかず</span>
+                  <span class="bank-num"><b class="bank-value" id="stat-books">0</b><span class="bank-unit">さつ</span></span>
+                </div>
+                <div class="bank-box">
+                  <span class="bank-label">よんだページ</span>
+                  <span class="bank-num"><b class="bank-value" id="stat-pages">0</b><span class="bank-unit">ページ</span></span>
+                </div>
+                <div class="bank-box">
+                  <span class="bank-label">ごうけいきんがく</span>
+                  <span class="bank-num"><b class="bank-value" id="stat-price">0</b><span class="bank-unit">えん</span></span>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
+                <h2 class="card-title" id="home-month-title">こんげつの ようす</h2>
+                <span class="chip" id="home-month-chip">0 / 10 さつ</span>
+              </div>
+              <div class="progress"><span id="home-progress" style="width:0%"></span></div>
+              <p class="muted tiny center" id="home-month-msg" style="margin-top:6px"></p>
+            </section>
+
+          </div>
+
+          <div class="stack">
+            <section class="card blue">
+              <div class="card-head"><h2 class="card-title">📚 本を きろくする</h2></div>
+              <div class="stack">
+                <button class="btn btn-blue btn-xl block" data-act="go" data-screen="scan">
+                  <span class="btn-icon">📷</span> カメラで バーコードを よむ
+                </button>
+                <button class="btn btn-ghost block" data-act="entry" data-mode="isbn">
+                  <span class="btn-icon">🔢</span> 本のばんごう(ISBN)で さがす
+                </button>
+                <button class="btn btn-ghost block" data-act="entry" data-mode="manual">
+                  <span class="btn-icon">✍️</span> じぶんで かいて きろくする
+                </button>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
+                <h2 class="card-title">🕒 さいきん きろくした本</h2>
+                <button class="btn btn-sm btn-ghost" data-act="tab" data-tab="list">ぜんぶ みる</button>
+              </div>
+              <div class="book-list" id="recent-list"></div>
+            </section>
+          </div>
         </div>
-    </div>
 
-    <!-- 目標達成のお祝いモーダル -->
-    <div id="goal-achieved-modal" class="fixed inset-0 hidden flex items-center justify-center p-4 z-[800] bg-black/80 text-center">
-        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 border-4 border-yellow-400 shadow-2xl animate-bounce">
-            <p class="text-6xl mb-4">🎊</p>
-            <h3 class="text-2xl font-black text-orange-500 mb-2">おめでとう！</h3>
-            <p class="text-lg font-bold text-gray-700">こんげつの もくひょう<br>たっせい！</p>
-            <button onclick="document.getElementById('goal-achieved-modal').classList.add('hidden')" class="mt-6 px-8 py-3 bg-yellow-400 text-white rounded-xl font-black text-xl shadow-lg border-b-4 border-yellow-600 active:scale-95">やったね！</button>
-        </div>
-    </div>
+        <p class="muted tiny center">©2026 どくしょ ちょきんばこ／ＩＣＴ支援の杜</p>
+      </div>
+    </section>
 
-    <div id="help-modal" class="fixed inset-0 hidden flex items-center justify-center p-4 z-[600] bg-black/70 text-left">
-        <div class="bg-white w-full max-w-sm rounded-[1.2rem] p-5 border-4 border-[#FFCCBC] flex flex-col shadow-2xl overflow-hidden text-left">
-            <h3 class="text-xl font-black text-[#D84315] mb-3 text-center">📕 つかいかた</h3>
-            <div class="flex-1 space-y-3 text-sm font-bold text-[#5D4037] overflow-y-auto no-scrollbar py-1 text-left">
-                <div class="bg-[#E1F5FE] p-2.5 rounded-xl border border-[#4FC3F7]">
-                    <p class="text-blue-600 mb-0.5 font-black text-sm">📸 バーコードをよむ</p>
-                    <p class="text-[11px] font-medium leading-relaxed">本のうしろのバーコードに赤い線をあわせてね。</p>
-                </div>
-                <div class="bg-[#FFF9C4] p-2.5 rounded-xl border border-[#FFF176]">
-                    <p class="text-yellow-700 mb-0.5 font-black text-sm">❌ きろくをけす</p>
-                    <p class="text-[11px] font-medium leading-relaxed">リストの画面で「❌」をおすと、まちがえたきろくを消せるよ。</p>
-                </div>
-                <div class="bg-[#D1C4E9] p-2.5 rounded-xl border border-[#9575CD]">
-                    <p class="text-[#4527A0] mb-0.5 font-black text-sm">💾 データをのこす</p>
-                    <p class="text-[11px] font-medium leading-relaxed">ほぞんしておけば、スマホをかえても続きからできるよ！</p>
-                </div>
+    <!-- ========== リスト ========== -->
+    <section class="screen" data-screen="tab-list" aria-label="よんだ本のリスト">
+      <div class="wrap">
+        <section class="card">
+          <div class="row wrap" style="justify-content:space-between">
+            <div class="row">
+              <select class="input select-sm" id="year-select" aria-label="とし"></select>
+              <select class="input select-sm" id="month-select" aria-label="つき"></select>
             </div>
-            <button onclick="hideHelp()" class="mt-4 w-full py-3 bg-[#FF7043] text-white rounded-xl font-black text-lg shadow active:scale-95 border-b-4 border-[#E64A19]">わかった！</button>
-        </div>
-    </div>
-
-    <!-- 検索モーダル (スマホ最適化済み) -->
-    <div id="modal-overlay" class="fixed inset-0 hidden flex items-center justify-center p-2 z-[500] bg-black/60 text-left">
-        <div class="bg-white w-[95%] max-w-md rounded-[1.5rem] p-4 border-4 border-[#4FC3F7] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <h3 class="text-lg font-black text-[#0288D1] mb-2 text-center text-left">🔎 本のばんごうで さがす</h3>
-            <div class="flex-1 overflow-y-auto space-y-4 pt-1 px-1 no-scrollbar text-left text-left text-left">
-                <div class="p-4 bg-blue-50 rounded-xl border-2 border-blue-200 text-left">
-                    <label class="text-xs font-black text-[#0277BD]">978ではじまるすうじをいれてください</label>
-                    <div class="flex gap-2 mt-1 items-stretch">
-                        <input type="text" id="input-isbn" placeholder="978..." class="flex-1 min-w-0 p-2 bg-white border-2 border-blue-200 rounded-lg outline-none text-base font-black">
-                        <button onclick="lookupISBNFromInput()" class="shrink-0 px-4 bg-[#29B6F6] text-white rounded-lg font-black text-sm border-b-2 border-[#0277BD] active:scale-95 whitespace-nowrap">さがす</button>
-                    </div>
-                </div>
-                <div id="search-candidates"></div>
-                <div class="border-t-2 border-dashed border-gray-200 pt-4 text-left">
-                    <label class="text-[10px] font-black text-gray-400">本の なまえ</label>
-                    <input type="text" id="input-title" class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg mb-2 text-base font-black">
-                    <label class="text-[10px] font-black text-gray-400">かいた ひと</label>
-                    <input type="text" id="input-author" class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg mb-2 text-base font-black">
-                    <div class="flex gap-3">
-                        <div class="flex-1">
-                            <label class="text-[10px] font-black text-gray-400">ページ</label>
-                            <input type="number" id="input-pages" class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-base font-black">
-                        </div>
-                        <div class="flex-1">
-                            <label class="text-[10px] font-black text-gray-400">ねだん</label>
-                            <input type="number" id="input-price" class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-base font-black">
-                        </div>
-                    </div>
-                </div>
+            <div class="seg" id="range-seg">
+              <button data-act="range" data-range="month">この月</button>
+              <button data-act="range" data-range="year">この年</button>
+              <button data-act="range" data-range="all">ぜんぶ</button>
             </div>
-            
-            <p class="text-[10px] font-bold text-center text-gray-500 mt-2 mb-1">さがした本がまちがっていなかったら<br>きろく！をおします</p>
-            <div class="flex gap-3 pt-2 border-t-2 mt-0 shrink-0 text-left">
-                <button onclick="hideManualModal()" class="flex-1 py-3 text-gray-500 font-black text-lg hover:bg-gray-100 rounded-xl">やめる</button>
-                <button onclick="manualAddBook()" class="flex-1 py-3 bg-[#29B6F6] text-white rounded-xl font-black text-lg shadow active:scale-95 border-b-4 border-[#0277BD]">きろく！</button>
+          </div>
+          <div class="row" style="margin-top:9px">
+            <input class="input" id="list-search" type="search" placeholder="🔎 本の なまえで さがす" autocomplete="off">
+          </div>
+          <div class="row" style="margin-top:9px;justify-content:space-between">
+            <span class="chip" id="list-count">0 さつ</span>
+            <span class="chip blue" id="list-pages">0 ページ</span>
+            <span class="chip gold" id="list-price">0 えん</span>
+          </div>
+        </section>
+
+        <p class="muted tiny center">本を タップすると くわしく みられます</p>
+        <div class="book-list" id="book-list"></div>
+      </div>
+    </section>
+
+    <!-- ========== スタンプ ========== -->
+    <section class="screen" data-screen="tab-stamp" aria-label="スタンプちょう">
+      <div class="wrap">
+        <section class="card">
+          <div class="row wrap" style="justify-content:space-between">
+            <div class="row">
+              <select class="input select-sm" id="year-select-2" aria-label="とし"></select>
+              <select class="input select-sm" id="month-select-2" aria-label="つき"></select>
             </div>
+            <div class="row">
+              <span class="muted tiny">もくひょう</span>
+              <input class="input" id="goal-input" type="number" min="1" max="99" inputmode="numeric"
+                     style="width:64px;text-align:center;padding:6px 4px" aria-label="こんげつのもくひょう">
+              <span class="muted tiny">さつ</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2 class="card-title" id="stamp-title">スタンプ帳</h2>
+            <span class="chip" id="stamp-count">0 / 10</span>
+          </div>
+          <div class="progress"><span id="stamp-progress" style="width:0%"></span></div>
+          <div class="progress-marks" id="stamp-marks"></div>
+          <div class="stamp-grid" id="stamp-grid" style="margin-top:10px"></div>
+          <p class="muted tiny center" id="stamp-msg" style="margin-top:10px"></p>
+        </section>
+      </div>
+    </section>
+
+    <!-- ========== きろく・せってい ========== -->
+    <section class="screen" data-screen="tab-data" aria-label="きろくとせってい">
+      <div class="wrap">
+        <div class="menu">
+          <button class="menu-item" data-act="go" data-screen="stats">
+            <span class="menu-emoji">📈</span>
+            <span class="menu-text"><b>どくしょの ふりかえり</b><span>つづけてきた ようすを グラフで みる</span></span>
+            <span class="menu-arrow">›</span>
+          </button>
+          <button class="menu-item" data-act="go" data-screen="backup">
+            <span class="menu-emoji">💾</span>
+            <span class="menu-text"><b>データを のこす・よみこむ</b><span>べつの きかいへ もっていく</span></span>
+            <span class="menu-arrow">›</span>
+          </button>
+          <button class="menu-item" data-act="go" data-screen="help">
+            <span class="menu-emoji">📕</span>
+            <span class="menu-text"><b>つかいかた</b><span>こまったときは ここを みてね</span></span>
+            <span class="menu-arrow">›</span>
+          </button>
+          <button class="menu-item install-only" id="install-row" data-act="install" hidden>
+            <span class="menu-emoji">📲</span>
+            <span class="menu-text"><b>アプリとして インストール</b><span>ホームがめんに おいて つかえます</span></span>
+            <span class="menu-arrow">›</span>
+          </button>
+          <button class="menu-item" data-act="toggle-sound">
+            <span class="menu-emoji" id="sound-emoji">🔔</span>
+            <span class="menu-text"><b>おとを ならす</b><span id="sound-state">ならす</span></span>
+            <span class="menu-arrow" id="sound-mark">オン</span>
+          </button>
+          <button class="menu-item danger" data-act="go" data-screen="reset">
+            <span class="menu-emoji">♻️</span>
+            <span class="menu-text"><b>きろくを ぜんぶ けす</b><span>もとには もどせません</span></span>
+            <span class="menu-arrow">›</span>
+          </button>
         </div>
-    </div>
 
-    <div id="celebration" class="fixed inset-0 pointer-events-none z-[1000] flex items-center justify-center hidden">
-        <div class="bg-white/95 p-10 rounded-[3rem] shadow-2xl text-center border-4 border-[#FF7043] animate-bounce text-left">
-            <p class="text-7xl mb-4">🎉</p>
-            <h2 class="text-xl font-black text-[#FF5722] text-left">きろく したよ！</h2>
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">ℹ️ このアプリについて</h2></div>
+          <p class="muted tiny" id="about-text"></p>
+        </section>
+      </div>
+    </section>
+
+    <!-- ========== カメラ（かいそう1） ========== -->
+    <section class="screen fill" data-screen="scan" aria-label="カメラでよみとる">
+      <div class="scan-screen">
+        <div class="scan-stage" id="scan-stage">
+          <div class="scan-idle" id="scan-idle">
+            <span style="font-size:44px">📷</span>
+            <p id="scan-idle-msg">カメラの じゅんびを しています…</p>
+          </div>
+          <div class="scan-frame" id="scan-frame" hidden>
+            <span class="scan-corner tl"></span><span class="scan-corner tr"></span>
+            <span class="scan-corner bl"></span><span class="scan-corner br"></span>
+            <span class="scan-line"></span>
+          </div>
+          <p class="scan-hint" id="scan-hint" hidden>本の うらの <b>978</b> ではじまる バーコードに あわせてね</p>
+          <div class="scan-ok" id="scan-ok"><span style="font-size:46px">✅</span><b style="color:var(--blue)">よめました！</b></div>
         </div>
+        <div class="scan-bar">
+          <button class="btn btn-ghost" data-act="torch" id="torch-btn" hidden>💡 ライト</button>
+          <button class="btn btn-blue" data-act="entry" data-mode="isbn">🔢 ばんごうで いれる</button>
+          <button class="btn btn-ghost" data-act="back">やめる</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 本をきろくする（かいそう1〜2） ========== -->
+    <section class="screen" data-screen="entry" aria-label="本をきろくする">
+      <div class="wrap">
+        <section class="card blue" id="isbn-card">
+          <div class="card-head"><h2 class="card-title">🔎 本のばんごう(ISBN)で さがす</h2></div>
+          <div class="row">
+            <input class="input" id="entry-isbn" type="text" inputmode="numeric" autocomplete="off"
+                   placeholder="978…" aria-label="ISBN">
+            <button class="btn btn-blue" data-act="lookup" style="flex:0 0 auto">さがす</button>
+          </div>
+          <div id="lookup-result" style="margin-top:9px"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">✍️ 本の じょうほう</h2></div>
+          <label class="field"><span>本の なまえ ＊</span>
+            <input class="input" id="entry-title" type="text" autocomplete="off" maxlength="120"></label>
+          <label class="field"><span>かいた ひと</span>
+            <input class="input" id="entry-author" type="text" autocomplete="off" maxlength="80"></label>
+          <div class="row" style="gap:10px;align-items:flex-start">
+            <label class="field" style="flex:1"><span>ページ ＊</span>
+              <input class="input" id="entry-pages" type="number" inputmode="numeric" min="1" max="20000"></label>
+            <label class="field" style="flex:1"><span>ねだん(えん)</span>
+              <input class="input" id="entry-price" type="number" inputmode="numeric" min="0" max="1000000"></label>
+          </div>
+          <div class="field">
+            <span style="display:block;font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:3px">おもしろさ</span>
+            <div id="entry-stars"></div>
+          </div>
+          <label class="field" style="margin-bottom:0"><span>かんそう（かかなくても いいよ）</span>
+            <textarea class="input" id="entry-memo" maxlength="200" placeholder="おもしろかった ところ など"></textarea></label>
+        </section>
+
+        <p class="center" id="entry-month-note" hidden></p>
+        <button class="btn btn-primary btn-xl block" data-act="save">📗 この本を きろくする！</button>
+        <p class="muted tiny center">＊の ところは かならず かいてね</p>
+      </div>
+    </section>
+
+    <!-- ========== 本のくわしく（かいそう1） ========== -->
+    <section class="screen" data-screen="detail" aria-label="本のくわしく">
+      <div class="wrap" id="detail-body"></div>
+    </section>
+
+    <!-- ========== ふりかえり（かいそう1） ========== -->
+    <section class="screen" data-screen="stats" aria-label="ふりかえり">
+      <div class="wrap" id="stats-body"></div>
+    </section>
+
+    <!-- ========== データ（かいそう1） ========== -->
+    <section class="screen" data-screen="backup" aria-label="データをのこす">
+      <div class="wrap">
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">💾 データを のこす</h2></div>
+          <p class="muted tiny" style="margin-bottom:10px">きかいを かえるときや、まんいちに そなえて ファイルに のこせます。</p>
+          <div class="stack">
+            <button class="btn btn-blue block" data-act="export">💾 ファイルに ほぞんする</button>
+            <button class="btn btn-green block" data-act="copy">📊 ひょう(スプレッドシート)に コピー</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">📖 のこした データを よむ</h2></div>
+          <p class="muted tiny" style="margin-bottom:10px">ほぞんした ファイル(.json)を えらんでください。<br>いまの きろくに <b>くわえる</b>か、<b>ぜんぶ いれかえる</b>か えらべます。</p>
+          <button class="btn btn-purple block" data-act="import">📂 ファイルを えらぶ</button>
+          <input type="file" id="import-file" accept=".json,application/json" hidden>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">🔐 データの ばしょ</h2></div>
+          <p class="muted tiny">きろくは この きかいの なかだけに ほぞんされます。<br>インターネットへ おくることは ありません。</p>
+        </section>
+      </div>
+    </section>
+
+    <!-- ========== つかいかた（かいそう1） ========== -->
+    <section class="screen" data-screen="help" aria-label="つかいかた">
+      <div class="wrap">
+        <section class="card blue">
+          <div class="card-head"><h2 class="card-title">📸 バーコードを よむ</h2></div>
+          <p class="tiny">本の うらに ある <b>978</b> で はじまる バーコードに、あかい線を あわせてね。<br>
+          すぐ下に ある <b>192</b> で はじまる バーコードは ねだんの バーコードなので つかいません。</p>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">🔢 ばんごうを いれる</h2></div>
+          <p class="tiny">カメラが つかえないときは、バーコードの下の <b>978…</b> の すうじを じぶんで いれて さがせます。</p>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">◀ まえの がめんに もどる</h2></div>
+          <p class="tiny">がめんの 下の <b>「もどる」</b>を おすか、がめんの <b>左右の はし</b>から まんなかへ <b>スーッと ゆびを うごかす</b>と もどれます。</p>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">⭐ ほしを つける</h2></div>
+          <p class="tiny">リストで 本を えらぶと、おもしろさの ほしや かんそうを かけます。まちがえた きろみは そこで けせます。</p>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">💾 データを のこす</h2></div>
+          <p class="tiny">「きろく」の がめんから ファイルに ほぞんできます。ほぞんして おけば、きかいを かえても つづきから できます。</p>
+        </section>
+      </div>
+    </section>
+
+    <!-- ========== ぜんぶけす（かいそう1） ========== -->
+    <section class="screen" data-screen="reset" aria-label="きろくをぜんぶけす">
+      <div class="wrap">
+        <section class="card" style="border-color:#FFCDD2">
+          <div class="card-head"><h2 class="card-title" style="color:var(--danger)">⚠️ きろくを ぜんぶ けす</h2></div>
+          <p class="tiny" style="margin-bottom:12px">
+            よんだ本の きろく・もくひょう・スタンプが <b>ぜんぶ きえます</b>。<br>
+            もとには もどせません。けす まえに 「データを のこす」で ほぞんして おくと あんしんです。
+          </p>
+          <div class="stack">
+            <button class="btn btn-blue block" data-act="export">💾 さきに ほぞんする</button>
+            <button class="btn btn-danger block" data-act="reset">♻️ ほんとうに ぜんぶ けす</button>
+            <button class="btn block" data-act="back">やめる</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+  </div>
+
+  <nav class="app-nav" id="app-nav" data-mode="tabs">
+    <div class="nav-tabs">
+      <button class="nav-tab" data-act="tab" data-tab="home"><span class="ico">🏠</span><span class="lbl">ホーム</span></button>
+      <button class="nav-tab" data-act="tab" data-tab="list"><span class="ico">📚</span><span class="lbl">リスト</span></button>
+      <button class="nav-tab" data-act="tab" data-tab="stamp"><span class="ico">💮</span><span class="lbl">スタンプ</span></button>
+      <button class="nav-tab" data-act="tab" data-tab="data"><span class="ico">🗂️</span><span class="lbl">きろく</span></button>
     </div>
+    <button class="nav-back" data-act="back"><span class="arrow">◀</span> <span id="nav-back-label">まえの がめんに もどる</span></button>
+  </nav>
+</div>
 
-    <div id="notice-msg"></div>
+<div class="edge-hint left" id="edge-left">◀</div>
+<div class="edge-hint right" id="edge-right">▶</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="dialog-root"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
 
-    <script>
-        const STORAGE_KEY_LOGS = 'reading_record_main_v1_logs';
-        const STORAGE_KEY_GOALS = 'reading_record_main_v1_goals';
-        
-        let logs = [];
-        let goals = {};
-        
-        try {
-            logs = JSON.parse(localStorage.getItem(STORAGE_KEY_LOGS)) || [];
-            goals = JSON.parse(localStorage.getItem(STORAGE_KEY_GOALS)) || {};
-        } catch(e) {
-            console.error("Storage load error", e);
-            logs = [];
-            goals = {};
-        }
+<!-- 学習ログ共通モジュール（全アプリ共通・不変） -->
+<script src="studyLog.js"></script>
+<script>
+(function () {
+'use strict';
 
-        let isScannerRunning = false, isProcessingBarcode = false;
-        let selectedYear = new Date().getFullYear(), selectedMonth = new Date().getMonth() + 1;
-        let audioCtx = null;
+/* ============================================================
+   0. 定数
+   ============================================================ */
+var APP_ID      = 'reading-books';   // 学習ログの appId（仕様書 §3.1）
+var APP_VERSION = '2.0.0';
 
-        const STAMPS = { 1: "🎍", 2: "❄️", 3: "🌸", 4: "🎒", 5: "🎏", 6: "💠", 7: "🍉", 8: "🌻", 9: "🎑", 10: "🎃", 11: "🍁", 12: "🎄" };
+/* このアプリ専用の保存キー。
+   `study.records.v1`（共通の学習ログ）は【ここに含めない】。
+   仕様書 §1.2 により、アプリのリセット処理で消してはならない。 */
+var KEYS = {
+  logs:  'reading_record_main_v1_logs',
+  goals: 'reading_record_main_v1_goals',
+  meta:  'reading_record_main_v1_meta'
+};
 
-        function playFanfare() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                const t = audioCtx.currentTime;
-                // パパパパン！ (ファンファーレ)
-                const playTone = (freq, time, dur) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(freq, time);
-                    gain.gain.setValueAtTime(0, time);
-                    gain.gain.linearRampToValueAtTime(0.08, time + 0.02);
-                    gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(time);
-                    osc.stop(time + dur);
-                };
+var MONTH_STAMPS = { 1:'🎍',2:'❄️',3:'🌸',4:'🎒',5:'🎏',6:'💠',7:'🍉',8:'🌻',9:'🎑',10:'🎃',11:'🍁',12:'🎄' };
 
-                playTone(392.00, t, 0.15);       
-                playTone(523.25, t + 0.15, 0.15);
-                playTone(659.25, t + 0.30, 0.15); 
-                playTone(783.99, t + 0.45, 0.15);
-                playTone(1046.50, t + 0.60, 0.6); 
-                playTone(523.25, t + 0.60, 0.6);  
+var $  = function (sel, root) { return (root || document).querySelector(sel); };
+var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
 
-            } catch(e) {}
-        }
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function toInt(v) { var n = parseInt(v, 10); return isFinite(n) ? n : 0; }
+function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function fmtNum(n) { return Number(n || 0).toLocaleString('ja-JP'); }
+var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        function playBeep() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.frequency.setValueAtTime(1320, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            } catch(e) {}
-        }
+/* ============================================================
+   1. 保存（このアプリのデータ）
+   ============================================================ */
+function readJSON(key, fallback) {
+  try {
+    var raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    var v = JSON.parse(raw);
+    return (v === null || v === undefined) ? fallback : v;
+  } catch (e) {
+    console.warn('[store] read failed', key, e);
+    return fallback;
+  }
+}
+function writeJSON(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (e) {
+    console.warn('[store] write failed', key, e);
+    toast('ほぞんできませんでした。きかいの あきが たりないかも');
+    return false;
+  }
+}
 
-        window.onload = () => { 
-            try {
-                initDateSelectors(); 
-                renderAll();
-            } catch(e) { console.error("Window onload error", e); }
-        };
+/** 日付表示（記録は timestamp を正とし、表示だけをここで作る） */
+function fmtDate(d) { return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate(); }
 
-        function initDateSelectors() {
-            const yLog = document.getElementById('year-selector-log'), yStamp = document.getElementById('year-selector-stamp');
-            const mLog = document.getElementById('month-selector-log'), mStamp = document.getElementById('month-selector-stamp');
-            const years = []; for(let i = 2020; i <= new Date().getFullYear() + 16; i++) years.push(i);
-            years.reverse(); 
-            if(yLog && yStamp) [yLog, yStamp].forEach(sel => { if(sel) { sel.innerHTML = ""; years.forEach(y => sel.add(new Option(`${y}年`, y))); sel.value = selectedYear; } });
-            if(mLog && mStamp) [mLog, mStamp].forEach(sel => { if(sel) { sel.innerHTML = ""; for(let i=1; i<=12; i++) sel.add(new Option(`${i}月`, i)); sel.value = selectedMonth; } });
-        }
+/** 古い形式の date 文字列（"2026/7/28"）を Date に戻す */
+function parseLegacyDate(s) {
+  if (!s) return null;
+  var m = String(s).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+  if (!m) return null;
+  var d = new Date(+m[1], +m[2] - 1, +m[3], 12, 0, 0);
+  return isNaN(d.getTime()) ? null : d;
+}
 
-        function syncDateAndRender(val, type) {
-            if (type === 'year') { selectedYear = parseInt(val); if(document.getElementById('year-selector-log')) document.getElementById('year-selector-log').value = val; if(document.getElementById('year-selector-stamp')) document.getElementById('year-selector-stamp').value = val; }
-            else { selectedMonth = parseInt(val); if(document.getElementById('month-selector-log')) document.getElementById('month-selector-log').value = val; if(document.getElementById('month-selector-stamp')) document.getElementById('month-selector-stamp').value = val; }
-            renderAll();
-        }
+/** 読み込んだ記録を正規化する（古いデータもここで救う） */
+function normalizeLog(raw, index) {
+  if (!raw || typeof raw !== 'object') return null;
+  var title = String(raw.title == null ? '' : raw.title).trim();
+  if (!title) return null;
 
-        function renderAll() { if (!Array.isArray(logs)) logs = []; renderChokinBako(); renderStampPage(); renderBookList(); }
+  var ts = Number(raw.timestamp);
+  if (!isFinite(ts) || ts <= 0) {
+    var legacy = parseLegacyDate(raw.date);
+    ts = legacy ? legacy.getTime() : Date.now();
+  }
+  var d = new Date(ts);
+  var isbn = String(raw.isbn == null ? '' : raw.isbn).replace(/[^0-9X]/gi, '');
 
-        function renderChokinBako() {
-            const tbc = document.getElementById('total-books-count'), tpr = document.getElementById('total-price-count'), tpa = document.getElementById('total-pages-count');
-            if (tbc) tbc.innerText = logs.length;
-            if (tpr) tpr.innerText = logs.reduce((s, b) => s + (parseInt(b.price) || 0), 0).toLocaleString();
-            if (tpa) tpa.innerText = logs.reduce((s, b) => s + (parseInt(b.pages) || 0), 0).toLocaleString();
-        }
+  return {
+    id:     String(raw.id == null || raw.id === '' ? (ts + '-' + index) : raw.id),
+    title:  title.slice(0, 120),
+    author: (String(raw.author == null ? '' : raw.author).trim() || 'ふめい').slice(0, 80),
+    pages:  clamp(toInt(raw.pages), 0, 20000),
+    price:  clamp(toInt(raw.price), 0, 1000000),
+    rating: clamp(toInt(raw.rating), 0, 5),
+    memo:   String(raw.memo == null ? '' : raw.memo).slice(0, 200),
+    isbn:   /^\d{13}$/.test(isbn) ? isbn : '',
+    timestamp: ts,
+    date:   fmtDate(d)
+  };
+}
 
-        function renderStampPage() {
-            const key = `${selectedYear}-${selectedMonth}`, goal = goals[key] || 10;
-            const countText = document.getElementById('stamp-count-text'), progress = document.getElementById('goal-progress'), grid = document.getElementById('stamp-grid');
-            const targetEl = document.getElementById('target-goal-input'), headEl = document.getElementById('stamp-month-header');
-            if(targetEl) targetEl.value = goal;
-            if(headEl) headEl.innerText = `${selectedYear}年 ${selectedMonth}月`;
-            const monthlyLogs = logs.filter(l => { if (!l) return false; const d = new Date(l.timestamp || l.date); return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth; });
-            const count = monthlyLogs.length;
-            if (countText) countText.innerText = `${count} / ${goal}`;
-            
-            // 達成時にプログレスバーを金色にする
-            if (count >= goal) {
-                progress.className = "h-full transition-all duration-700 progress-gold";
-            } else {
-                progress.className = "bg-gradient-to-r from-[#FFAB91] to-[#FF7043] h-full transition-all duration-700";
+var logs  = [];
+var goals = {};
+var meta  = {};
+
+function loadAll() {
+  var rawLogs = readJSON(KEYS.logs, []);
+  if (!Array.isArray(rawLogs)) rawLogs = [];
+  logs = [];
+  for (var i = 0; i < rawLogs.length; i++) {
+    var n = normalizeLog(rawLogs[i], i);
+    if (n) logs.push(n);
+  }
+  sortLogs();
+
+  var g = readJSON(KEYS.goals, {});
+  goals = (g && typeof g === 'object' && !Array.isArray(g)) ? g : {};
+
+  var m = readJSON(KEYS.meta, {});
+  meta = (m && typeof m === 'object' && !Array.isArray(m)) ? m : {};
+  if (!meta.celebrated || typeof meta.celebrated !== 'object') meta.celebrated = {};
+  if (typeof meta.sound !== 'boolean') meta.sound = true;
+}
+function sortLogs() { logs.sort(function (a, b) { return b.timestamp - a.timestamp; }); }
+function saveLogs()  { sortLogs(); return writeJSON(KEYS.logs, logs); }
+function saveGoals() { return writeJSON(KEYS.goals, goals); }
+function saveMeta()  { return writeJSON(KEYS.meta, meta); }
+
+function monthKey(y, m) { return y + '-' + m; }
+function goalOf(y, m) { return clamp(toInt(goals[monthKey(y, m)]) || 10, 1, 99); }
+function logsIn(y, m) {
+  return logs.filter(function (l) {
+    var d = new Date(l.timestamp);
+    return d.getFullYear() === y && (m == null || d.getMonth() + 1 === m);
+  });
+}
+function sumOf(list, field) {
+  return list.reduce(function (s, b) { return s + (b[field] || 0); }, 0);
+}
+
+/* ============================================================
+   2. あそびの演出（音・紙ふぶき・トースト）
+   ============================================================ */
+var audioCtx = null;
+function tone(freq, at, dur, type) {
+  var osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+  osc.type = type || 'sawtooth';
+  osc.frequency.setValueAtTime(freq, at);
+  gain.gain.setValueAtTime(0, at);
+  gain.gain.linearRampToValueAtTime(0.07, at + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, at + dur);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(at); osc.stop(at + dur);
+}
+function ensureAudio() {
+  if (!meta.sound) return false;
+  try {
+    if (!audioCtx) {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return false;
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return true;
+  } catch (e) { return false; }
+}
+function playFanfare() {
+  if (!ensureAudio()) return;
+  try {
+    var t = audioCtx.currentTime;
+    tone(392.00, t, 0.15); tone(523.25, t + 0.15, 0.15);
+    tone(659.25, t + 0.30, 0.15); tone(783.99, t + 0.45, 0.15);
+    tone(1046.50, t + 0.60, 0.6); tone(523.25, t + 0.60, 0.6);
+  } catch (e) {}
+}
+function playBeep() {
+  if (!ensureAudio()) return;
+  try { tone(1320, audioCtx.currentTime, 0.12, 'square'); } catch (e) {}
+}
+
+var toastTimer = 0;
+function toast(msg) {
+  var el = $('#toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2800);
+}
+
+/** 紙ふぶき（外部ライブラリなし） */
+function confetti() {
+  if (reduceMotion) return;
+  var cv = $('#fx'), ctx = cv.getContext('2d');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W = cv.width = Math.floor(innerWidth * dpr);
+  var H = cv.height = Math.floor(innerHeight * dpr);
+  cv.style.display = 'block';
+  var colors = ['#FFD700', '#FFA500', '#FF4500', '#FF7043', '#4FC3F7', '#66BB6A', '#FFFFFF'];
+  var parts = [], i;
+  for (i = 0; i < 130; i++) {
+    parts.push({
+      x: W * (0.2 + Math.random() * 0.6),
+      y: H * (0.45 + Math.random() * 0.1),
+      vx: (Math.random() - 0.5) * 15 * dpr,
+      vy: (-9 - Math.random() * 12) * dpr,
+      s: (5 + Math.random() * 7) * dpr,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.35,
+      c: colors[(Math.random() * colors.length) | 0]
+    });
+  }
+  var start = performance.now();
+  function frame(now) {
+    var t = now - start;
+    ctx.clearRect(0, 0, W, H);
+    for (var k = 0; k < parts.length; k++) {
+      var p = parts[k];
+      p.vy += 0.42 * dpr; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.vx *= 0.992;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.c; ctx.globalAlpha = Math.max(0, 1 - t / 2600);
+      ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+      ctx.restore();
+    }
+    if (t < 2600) requestAnimationFrame(frame);
+    else { ctx.clearRect(0, 0, W, H); cv.style.display = 'none'; }
+  }
+  requestAnimationFrame(frame);
+}
+
+function celebrate(emoji, text, sub) {
+  var el = document.createElement('div');
+  el.className = 'celebrate';
+  el.innerHTML = '<div class="box"><span class="big">' + esc(emoji) + '</span><b>' + esc(text) + '</b>' +
+    (sub ? '<p class="muted tiny" style="margin-top:6px">' + esc(sub) + '</p>' : '') + '</div>';
+  document.body.appendChild(el);
+  setTimeout(function () { el.remove(); }, 2400);
+}
+
+/* ============================================================
+   3. ダイアログ（window.confirm を使わない）
+   ============================================================ */
+var dialogResolve = null;
+function dialogOpen() { return !!$('#dialog-root').firstChild; }
+function closeDialog(value) {
+  var root = $('#dialog-root');
+  root.innerHTML = '';
+  if (dialogResolve) { var r = dialogResolve; dialogResolve = null; r(value); }
+}
+/** opts: {emoji,title,body,buttons:[{label,value,cls}]} → Promise<value> */
+function showDialog(opts) {
+  closeDialog(null);
+  return new Promise(function (resolve) {
+    dialogResolve = resolve;
+    var root = $('#dialog-root');
+    var btns = (opts.buttons || [{ label: 'OK', value: true, cls: 'btn-primary' }]).map(function (b, i) {
+      return '<button class="btn ' + (b.cls || '') + '" data-dlg="' + i + '">' + esc(b.label) + '</button>';
+    }).join('');
+    root.innerHTML =
+      '<div class="dialog-back" data-dlg-back="1">' +
+        '<div class="dialog' + (opts.danger ? ' danger' : '') + '" role="dialog" aria-modal="true">' +
+          (opts.emoji ? '<span class="dlg-emoji">' + esc(opts.emoji) + '</span>' : '') +
+          '<h3>' + esc(opts.title || '') + '</h3>' +
+          (opts.body ? '<p>' + String(opts.body) + '</p>' : '') +
+          '<div class="dlg-btns">' + btns + '</div>' +
+        '</div>' +
+      '</div>';
+    var list = opts.buttons || [{ value: true }];
+    $$('[data-dlg]', root).forEach(function (b) {
+      b.addEventListener('click', function () { closeDialog(list[+b.getAttribute('data-dlg')].value); });
+    });
+    var back = $('[data-dlg-back]', root);
+    back.addEventListener('click', function (e) { if (e.target === back) closeDialog(null); });
+    var first = $('.btn', root); if (first) first.focus();
+  });
+}
+function confirmDialog(title, body, okLabel, danger) {
+  return showDialog({
+    emoji: danger ? '⚠️' : '❓',
+    title: title, body: body, danger: !!danger,
+    buttons: [
+      { label: 'やめる', value: false, cls: '' },
+      { label: okLabel || 'いいよ', value: true, cls: danger ? 'btn-danger' : 'btn-primary' }
+    ]
+  });
+}
+
+/* ============================================================
+   4. 学習ログ study.v1
+   ------------------------------------------------------------
+   保存側 : StudyLog.saveStudyRecord（studyLog.js／全アプリ共通・不変）
+   組立側 : このセクション
+   読出側 : §5（読み出し専用。書き込み・削除は行わない）
+   ============================================================ */
+
+/** 操作していた時間の計測（仕様書 §2.8 の参照実装） */
+var ActiveTime = (function () {
+  var total = 0, mark = Date.now(), idle = false;
+  var tick = function () {
+    if (!idle && !document.hidden) total += Date.now() - mark;
+    mark = Date.now();
+  };
+  var wake = function () { tick(); idle = false; };
+  setInterval(tick, 1000);
+  document.addEventListener('visibilitychange', tick);
+  ['click', 'keydown', 'touchstart', 'pointerdown'].forEach(function (ev) {
+    document.addEventListener(ev, wake, { passive: true });
+  });
+  setInterval(function () { tick(); idle = true; }, 60000);   // 60秒 むそうさで とめる
+  return { value: function () { tick(); return total; } };
+})();
+
+/** 表示名から不変IDを作る（乱数・時刻を混ぜない決定的ハッシュ：djb2） */
+function djb2(str) {
+  var h = 5381;
+  for (var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+function normalizeTitle(t) {
+  return String(t || '').trim().toLowerCase()
+    .replace(/[\s　]+/g, '')
+    .replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+}
+/** 単元＝読んだ本そのもの。ISBN があれば改訂されても不変の ID になる（仕様書 §2.5） */
+function unitForBook(book) {
+  if (book.isbn) return { id: 'book-' + book.isbn, title: book.title, preset: false };
+  return { id: 'custom-' + djb2(normalizeTitle(book.title)), title: book.title, preset: false };
+}
+
+var Study = {
+  session: null,
+
+  /** mode: 'scan'（カメラ）/ 'isbn'（ばんごう検索）/ 'manual'（手入力） */
+  begin: function (mode) {
+    // 記録中に やりかたを かえたときは、あとから えらんだ ほうを のこす
+    if (this.session) { this.session.mode = mode; return; }
+    this.session = {
+      mode: mode,
+      startedAt: new Date(),
+      startMs: Date.now(),
+      startActive: ActiveTime.value(),
+      lookup: 'none'
+    };
+  },
+  markLookup: function (kind) { if (this.session) this.session.lookup = kind; },
+
+  /* 1冊も記録していない中断は保存しない（仕様書 §5.4 中断レコードの3原則） */
+  cancel: function () { this.session = null; },
+
+  complete: function (book) {
+    var s = this.session;
+    this.session = null;
+    if (!s) return null;
+    if (typeof StudyLog === 'undefined' || typeof StudyLog.saveStudyRecord !== 'function') return null;
+
+    var endMs = Date.now();
+    var elapsedMs = Math.max(0, endMs - s.startMs);
+    var activeMs = Math.min(Math.max(0, ActiveTime.value() - s.startActive), elapsedMs); // §2.8 クランプ
+    var unit = unitForBook(book);
+    var d = new Date(book.timestamp);
+    var y = d.getFullYear(), m = d.getMonth() + 1;
+    var monthLogs = logsIn(y, m);
+    var goal = goalOf(y, m);
+
+    return StudyLog.saveStudyRecord({
+      appId: APP_ID,
+      appVersion: APP_VERSION,
+      kind: 'session',
+      mode: s.mode,
+      unit: unit,
+      /* ISBN で見つけた本＝実在の書誌、手入力＝児童が作った単元 */
+      source: book.isbn ? 'course' : 'custom',
+      multiplayer: false,
+      /* 読書の記録は正誤判定ではなく児童の自己申告（仕様書 §2.9） */
+      grading: 'selfReport',
+      startedAt: s.startedAt.toISOString(),
+      endedAt: new Date(endMs).toISOString(),
+      elapsedMs: elapsedMs,
+      activeMs: activeMs,
+      timeBasis: 'app',
+      status: 'completed',
+      summary: { count: 1, attempted: 1, firstTryCorrect: 1, correct: 1 },
+      items: [{ q: unit.id, ok: true, firstTry: true, tries: 1, ms: elapsedMs }],
+      ext: {
+        pages: book.pages,
+        priceYen: book.price,
+        rating: book.rating,
+        isbn: book.isbn || null,
+        lookup: s.lookup,                 // 'auto' 自動取得 / 'manual' 手入力 / 'none'
+        monthKey: y + '-' + pad2(m),
+        monthlyBooks: monthLogs.length,
+        monthlyGoal: goal,
+        goalAchieved: monthLogs.length >= goal,
+        totalBooks: logs.length,
+        totalPages: sumOf(logs, 'pages')
+      }
+    });
+  }
+};
+
+/* ============================================================
+   5. 学習ログの読み出し（読み出し専用・仕様書 §5.5）
+   ============================================================ */
+function loadStudyRecords(appId) {
+  try {
+    var raw = localStorage.getItem('study.records.v1');
+    if (!raw) return [];
+    var log = JSON.parse(raw);
+    if (!Array.isArray(log)) return [];
+    return log.filter(function (r) {
+      return r && r.schema === 'study.v1' && r.appId === appId;
+    }).reverse();
+  } catch (e) {
+    return [];
+  }
+}
+
+/* ============================================================
+   6. がめんの ゆきき（かいそう構造・履歴・スワイプ）
+   ============================================================ */
+var TABS = ['home', 'list', 'stamp', 'data'];
+var SCREENS = {
+  'tab-home':  { tab: 'home',  title: '📖 どくしょ ちょきんばこ', render: renderHome },
+  'tab-list':  { tab: 'list',  title: '📚 よんだ本の リスト',     render: renderList },
+  'tab-stamp': { tab: 'stamp', title: '💮 スタンプちょう',        render: renderStamp },
+  'tab-data':  { tab: 'data',  title: '🗂️ きろく と せってい',    render: renderData },
+  'scan':      { tab: 'home',  title: '📷 カメラで よみとる', back: 'ホームに もどる',
+                 render: onScanShow, hide: onScanHide },
+  'entry':     { tab: 'home',  title: '📗 本を きろくする',   back: 'もどる', render: renderEntry, hide: onEntryHide },
+  'detail':    { tab: 'list',  title: '🔎 本の くわしく',     back: 'リストに もどる', render: renderDetail },
+  'stats':     { tab: 'data',  title: '📈 どくしょの ふりかえり', back: 'もどる', render: renderStats },
+  'backup':    { tab: 'data',  title: '💾 データを のこす',   back: 'もどる', render: function () {} },
+  'help':      { tab: 'data',  title: '📕 つかいかた',        back: 'もどる', render: function () {} },
+  'reset':     { tab: 'data',  title: '♻️ ぜんぶ けす',       back: 'もどる', render: function () {} }
+};
+
+var navStack = [{ tab: 'home' }];
+var navIndex = 0;
+var activeKey = null;
+var scrollMemo = {};
+var lastPopAt = 0;
+
+function entryKey(e) { return e.screen ? e.screen : 'tab-' + e.tab; }
+function currentTab() { var e = navStack[navIndex]; return (SCREENS[entryKey(e)] || {}).tab || 'home'; }
+function screenEl(key) { return $('.screen[data-screen="' + key + '"]'); }
+
+function navInit() {
+  /* 履歴の いちばん下に「みはり(guard)」を1つ おいておく。
+     これが あるおかげで、いちばん上のがめんで「もどる」を しても
+     アプリの外へ出ない＝アプリが かってに おわらない。 */
+  try {
+    history.replaceState({ app: 1, guard: 1 }, '');
+    history.pushState({ app: 1, i: 0 }, '');
+  } catch (e) {}
+  window.addEventListener('popstate', onPopState);
+  paint(null);
+}
+
+function navPush(entry) {
+  navStack = navStack.slice(0, navIndex + 1);
+  navStack.push(entry);
+  navIndex = navStack.length - 1;
+  try { history.pushState({ app: 1, i: navIndex }, ''); } catch (e) {}
+  paint('fwd');
+}
+
+function navTab(tab) {
+  if (TABS.indexOf(tab) < 0) return;
+  var cur = navStack[navIndex];
+  if (!cur.screen && cur.tab === tab) { paint(null); return; }
+  navPush({ tab: tab });
+}
+
+function navGo(screen, params) {
+  if (!SCREENS[screen]) return;
+  navPush({ tab: currentTab(), screen: screen, params: params || {} });
+}
+
+/** 「もどる」。履歴を1つ戻すだけにして、動きの出どころを1本にする */
+function goBack() {
+  if (dialogOpen()) { closeDialog(null); return; }
+  if (Date.now() - lastPopAt < 350) return;      // 端末のジェスチャーとの二重発火よけ
+  if (navIndex > 0) { history.back(); return; }
+  // 最初のがめん：アプリを おわらせない
+  if (currentTab() !== 'home') { navTab('home'); return; }
+  toast('ここが さいしょの がめんだよ');
+}
+
+function onPopState(e) {
+  lastPopAt = Date.now();
+
+  // ダイアログが ひらいていたら、まず それを とじる（がめんは うごかさない）
+  if (dialogOpen()) {
+    closeDialog(null);
+    try { history.pushState({ app: 1, i: navIndex }, ''); } catch (err) {}
+    return;
+  }
+
+  var s = e.state;
+  if (!s || s.app !== 1 || typeof s.i !== 'number') {
+    /* みはり(guard)や、アプリの外の履歴に とどいた（＝このままだと アプリが おわる）。
+       同じ位置を 積み直して、その場に とどまる。 */
+    try { history.pushState({ app: 1, i: navIndex }, ''); } catch (err) {}
+    if (navIndex > 0) { navIndex = 0; paint('back'); }
+    else toast('ここが さいしょの がめんだよ');
+    return;
+  }
+
+  var i = clamp(s.i, 0, navStack.length - 1);
+  if (i !== s.i) { try { history.replaceState({ app: 1, i: i }, ''); } catch (err) {} }
+  if (i === navIndex) return;
+  var dir = i < navIndex ? 'back' : 'fwd';
+  navIndex = i;
+  paint(dir);
+}
+
+function paint(direction) {
+  var entry = navStack[navIndex];
+  var key = entryKey(entry);
+  var def = SCREENS[key] || SCREENS['tab-home'];
+
+  if (activeKey && activeKey !== key) {
+    var prevEl = screenEl(activeKey);
+    if (prevEl) { scrollMemo[activeKey] = prevEl.scrollTop; prevEl.classList.remove('is-active'); }
+    var prevDef = SCREENS[activeKey];
+    if (prevDef && prevDef.hide) { try { prevDef.hide(key); } catch (e) { console.warn(e); } }
+  }
+  activeKey = key;
+
+  var el = screenEl(key);
+  if (!el) return;
+  el.classList.add('is-active');
+  try { def.render(entry.params || {}); } catch (e) { console.error('[render]', key, e); }
+
+  if (direction && !reduceMotion) {
+    el.classList.remove('anim-fwd', 'anim-back');
+    void el.offsetWidth;
+    el.classList.add(direction === 'back' ? 'anim-back' : 'anim-fwd');
+  }
+  el.scrollTop = (direction === 'back' && scrollMemo[key]) ? scrollMemo[key] : 0;
+
+  // ヘッダー・下のナビ
+  $('#app-title').textContent = def.title;
+  var isRoot = !entry.screen;
+  var back = $('#hdr-back');
+  back.hidden = isRoot && navIndex === 0;
+  $('#hdr-help').hidden = !isRoot;
+  var nav = $('#app-nav');
+  nav.setAttribute('data-mode', isRoot ? 'tabs' : 'back');
+  $('#nav-back-label').textContent = def.back || 'まえの がめんに もどる';
+  var tab = def.tab;
+  $$('.nav-tab').forEach(function (b) {
+    b.classList.toggle('on', b.getAttribute('data-tab') === tab);
+  });
+}
+
+/* ---- 画面の左右のはしから まんなかへの スワイプで もどる ---- */
+(function setupEdgeSwipe() {
+  var EDGE = 28;            // はしと みなす はば(px)
+  var TRIGGER = 68;         // もどると きめる きょり(px)
+  var start = null;
+  var hintEl = null;
+
+  function hint(dir) { return dir === 'ltr' ? $('#edge-left') : $('#edge-right'); }
+
+  function reset() {
+    if (hintEl) {
+      hintEl.style.transition = 'opacity .18s, transform .18s';
+      hintEl.style.opacity = '0';
+      hintEl.style.transform = (start && start.dir === 'ltr') ? 'translateX(-100%)' : 'translateX(100%)';
+    }
+    hintEl = null; start = null;
+  }
+
+  document.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 1) { reset(); return; }
+    var t = e.touches[0];
+    var w = window.innerWidth;
+    var dir = null;
+    if (t.clientX <= EDGE) dir = 'ltr';
+    else if (t.clientX >= w - EDGE) dir = 'rtl';
+    if (!dir) return;
+    start = { x: t.clientX, y: t.clientY, dir: dir, t: Date.now(), locked: false };
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (!start || e.touches.length !== 1) return;
+    var t = e.touches[0];
+    var dx = t.clientX - start.x, dy = t.clientY - start.y;
+    var inward = start.dir === 'ltr' ? dx : -dx;
+
+    if (!start.locked) {
+      if (Math.abs(dy) > Math.abs(dx) || inward < 8) {
+        if (Math.abs(dy) > 14) reset();     // たてスクロールだった
+        return;
+      }
+      start.locked = true;
+      hintEl = hint(start.dir);
+      hintEl.style.transition = 'none';
+    }
+    // 端末じたいの スワイプ（ブラウザの戻る）を おさえる
+    if (e.cancelable) e.preventDefault();
+
+    var p = clamp(inward / TRIGGER, 0, 1.35);
+    var shift = (start.dir === 'ltr' ? -100 + Math.min(inward, 96) : 100 - Math.min(inward, 96));
+    hintEl.style.opacity = String(Math.min(1, p));
+    hintEl.style.transform = 'translateX(' + shift + '%)';
+  }, { passive: false });
+
+  document.addEventListener('touchend', function () {
+    if (!start || !start.locked) { reset(); return; }
+    var el = hintEl;
+    var fire = el && parseFloat(el.style.opacity || '0') >= 0.85;
+    reset();
+    if (fire) goBack();
+  }, { passive: true });
+
+  /* 端末が ジェスチャーを もっていった場合は touchcancel が くる。
+     このとき「もどる」を おこなうと、ブラウザの戻ると 二重に なるため なにもしない。 */
+  document.addEventListener('touchcancel', function () { reset(); }, { passive: true });
+})();
+
+/* ============================================================
+   7. がめんごとの えがきかた
+   ============================================================ */
+var selectedYear = new Date().getFullYear();
+var selectedMonth = new Date().getMonth() + 1;
+var listRange = 'month';
+var listQuery = '';
+
+function starsHTML(rating, id, size) {
+  var out = '<div class="stars"' + (size ? ' style="font-size:' + size + '"' : '') + '>';
+  for (var i = 1; i <= 5; i++) {
+    out += '<button class="star' + (i <= rating ? ' on' : '') + '" data-act="rate" data-id="' + esc(id) +
+           '" data-star="' + i + '" aria-label="ほし' + i + '">★</button>';
+  }
+  return out + '</div>';
+}
+
+function bookItemHTML(b) {
+  var d = new Date(b.timestamp);
+  return '<button class="book-item" data-act="detail" data-id="' + esc(b.id) + '">' +
+    '<span class="book-main">' +
+      '<span class="book-top">' +
+        '<span class="chip">' + (d.getMonth() + 1) + '/' + d.getDate() + '</span>' +
+        '<span class="book-title">' + esc(b.title) + '</span>' +
+      '</span>' +
+      '<span class="book-sub">' +
+        '<span class="book-author">' + esc(b.author) + '</span>' +
+        '<span class="book-figs">' + fmtNum(b.pages) + 'p / ' + fmtNum(b.price) + '円</span>' +
+      '</span>' +
+    '</span>' +
+    '<span class="book-side">' +
+      '<span class="stars" aria-hidden="true">' +
+        '★★★★★'.split('').map(function (s, i) {
+          return '<span class="star' + (i < b.rating ? ' on' : '') + '">★</span>';
+        }).join('') +
+      '</span>' +
+      '<span class="menu-arrow">›</span>' +
+    '</span>' +
+  '</button>';
+}
+
+function emptyState(msg) {
+  return '<div class="empty-state"><span class="big">📚</span>' + esc(msg) + '</div>';
+}
+
+/* ---------- ホーム ---------- */
+function renderHome() {
+  $('#stat-books').textContent = fmtNum(logs.length);
+  $('#stat-pages').textContent = fmtNum(sumOf(logs, 'pages'));
+  $('#stat-price').textContent = fmtNum(sumOf(logs, 'price'));
+
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth() + 1;
+  var monthLogs = logsIn(y, m);
+  var goal = goalOf(y, m);
+  var pct = clamp(Math.round(monthLogs.length / goal * 100), 0, 100);
+
+  $('#home-month-title').textContent = m + '月の ようす';
+  $('#home-month-chip').textContent = monthLogs.length + ' / ' + goal + ' さつ';
+  var bar = $('#home-progress');
+  bar.style.width = pct + '%';
+  bar.classList.toggle('gold', monthLogs.length >= goal);
+  $('#home-month-msg').textContent = monthLogs.length >= goal
+    ? 'もくひょう たっせい！ すごい！ 🎉'
+    : 'あと ' + (goal - monthLogs.length) + 'さつで もくひょう たっせい！';
+
+  var recent = logs.slice(0, 3);
+  $('#recent-list').innerHTML = recent.length
+    ? recent.map(bookItemHTML).join('')
+    : '<div class="empty-state" style="padding:22px"><span class="big">📖</span>まだ きろくが ありません</div>';
+}
+
+/* ---------- リスト ---------- */
+function fillYearMonth() {
+  var years = {};
+  years[new Date().getFullYear()] = true;
+  years[selectedYear] = true;
+  logs.forEach(function (l) { years[new Date(l.timestamp).getFullYear()] = true; });
+  var list = Object.keys(years).map(Number).sort(function (a, b) { return b - a; });
+  if (list.indexOf(new Date().getFullYear() + 1) < 0) list.unshift(new Date().getFullYear() + 1);
+
+  ['#year-select', '#year-select-2'].forEach(function (sel) {
+    var el = $(sel); if (!el) return;
+    el.innerHTML = list.map(function (y) {
+      return '<option value="' + y + '"' + (y === selectedYear ? ' selected' : '') + '>' + y + '年</option>';
+    }).join('');
+  });
+  ['#month-select', '#month-select-2'].forEach(function (sel) {
+    var el = $(sel); if (!el) return;
+    var out = '';
+    for (var i = 1; i <= 12; i++) {
+      out += '<option value="' + i + '"' + (i === selectedMonth ? ' selected' : '') + '>' + i + '月</option>';
+    }
+    el.innerHTML = out;
+  });
+}
+
+function filteredLogs() {
+  var list;
+  if (listRange === 'all') list = logs.slice();
+  else if (listRange === 'year') list = logsIn(selectedYear, null);
+  else list = logsIn(selectedYear, selectedMonth);
+
+  var q = listQuery.trim().toLowerCase();
+  if (q) {
+    list = list.filter(function (b) {
+      return (b.title + ' ' + b.author).toLowerCase().indexOf(q) >= 0;
+    });
+  }
+  return list;
+}
+
+function renderList() {
+  fillYearMonth();
+  $$('#range-seg button').forEach(function (b) {
+    b.classList.toggle('on', b.getAttribute('data-range') === listRange);
+  });
+  var disabled = listRange === 'all';
+  $('#year-select').disabled = disabled;
+  $('#month-select').disabled = disabled || listRange === 'year';
+
+  var list = filteredLogs();
+  $('#list-count').textContent = fmtNum(list.length) + ' さつ';
+  $('#list-pages').textContent = fmtNum(sumOf(list, 'pages')) + ' ページ';
+  $('#list-price').textContent = fmtNum(sumOf(list, 'price')) + ' えん';
+  if ($('#list-search').value !== listQuery) $('#list-search').value = listQuery;
+
+  $('#book-list').innerHTML = list.length
+    ? list.map(bookItemHTML).join('')
+    : emptyState(listQuery ? 'みつかりませんでした' : 'この きかんの きろくは ありません');
+}
+
+/* ---------- スタンプ ---------- */
+function renderStamp() {
+  fillYearMonth();
+  var count = logsIn(selectedYear, selectedMonth).length;
+  var goal = goalOf(selectedYear, selectedMonth);
+
+  $('#goal-input').value = goal;
+  $('#stamp-title').textContent = selectedYear + '年 ' + selectedMonth + '月の スタンプ';
+  $('#stamp-count').textContent = count + ' / ' + goal;
+
+  var pct = clamp(Math.round(count / goal * 100), 0, 100);
+  var bar = $('#stamp-progress');
+  bar.style.width = pct + '%';
+  bar.classList.toggle('gold', count >= goal);
+  $('#stamp-marks').innerHTML = '<span>0</span><span>' + Math.ceil(goal / 2) + '</span><span>' + goal + '</span>';
+
+  var cells = Math.max(goal, count, 12);
+  cells = Math.ceil(cells / 6) * 6;
+  var icon = MONTH_STAMPS[selectedMonth] || '💮';
+  var html = '';
+  for (var i = 0; i < cells; i++) {
+    html += '<div class="stamp-cell' + (i < count ? ' filled' : '') + '">' + (i < count ? icon : '') + '</div>';
+  }
+  $('#stamp-grid').innerHTML = html;
+  $('#stamp-msg').textContent = count >= goal
+    ? 'もくひょう たっせい！ よく がんばったね 🎉'
+    : 'あと ' + (goal - count) + 'さつ！';
+}
+
+/* ---------- きろく・せってい ---------- */
+function renderData() {
+  var on = !!meta.sound;
+  $('#sound-emoji').textContent = on ? '🔔' : '🔕';
+  $('#sound-state').textContent = on ? 'ならす' : 'ならさない';
+  $('#sound-mark').textContent = on ? 'オン' : 'オフ';
+
+  var records = loadStudyRecords(APP_ID);
+  $('#about-text').innerHTML =
+    'バージョン ' + esc(APP_VERSION) + '<br>' +
+    'がくしゅうログ ' + esc('study.v1') +
+    '（このアプリの きろく ' + records.length + '件）<br>' +
+    'きろくは この きかいの なかだけに ほぞんされ、インターネットへ おくることは ありません。';
+}
+
+/* ---------- 本のくわしく ---------- */
+function findLog(id) {
+  for (var i = 0; i < logs.length; i++) if (logs[i].id === String(id)) return logs[i];
+  return null;
+}
+function renderDetail(params) {
+  var b = findLog(params.id);
+  var box = $('#detail-body');
+  if (!b) { box.innerHTML = emptyState('この きろくは ありません'); return; }
+  var d = new Date(b.timestamp);
+  box.innerHTML =
+    '<section class="card">' +
+      '<div class="card-head"><span class="chip">' + d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + '</span></div>' +
+      '<h2 style="font-size:20px;font-weight:900;line-height:1.4">' + esc(b.title) + '</h2>' +
+      '<p class="muted" style="margin-top:4px">' + esc(b.author) + '</p>' +
+      '<div class="kpis" style="margin-top:12px">' +
+        '<div class="kpi"><b>' + fmtNum(b.pages) + '</b><span>ページ</span></div>' +
+        '<div class="kpi"><b>' + fmtNum(b.price) + '</b><span>えん</span></div>' +
+        (b.isbn ? '<div class="kpi"><b style="font-size:13px">' + esc(b.isbn) + '</b><span>ISBN</span></div>' : '') +
+      '</div>' +
+    '</section>' +
+    '<section class="card">' +
+      '<div class="card-head"><h2 class="card-title">⭐ おもしろさ</h2></div>' +
+      starsHTML(b.rating, b.id, '34px') +
+    '</section>' +
+    '<section class="card">' +
+      '<div class="card-head"><h2 class="card-title">✏️ かんそう</h2></div>' +
+      '<textarea class="input" id="detail-memo" maxlength="200" placeholder="おもしろかった ところ など">' + esc(b.memo) + '</textarea>' +
+      '<button class="btn btn-blue block" data-act="save-memo" data-id="' + esc(b.id) + '" style="margin-top:9px">かんそうを ほぞん</button>' +
+    '</section>' +
+    '<button class="btn btn-danger block" data-act="delete" data-id="' + esc(b.id) + '">❌ この きろくを けす</button>';
+}
+
+/* ---------- ふりかえり ---------- */
+function renderStats() {
+  var box = $('#stats-body');
+  var records = loadStudyRecords(APP_ID);
+
+  // 学習ログから「アプリで きろくに つかった時間」を集める（読み出し専用）
+  var activeMs = 0;
+  records.forEach(function (r) { activeMs += Number(r.activeMs || 0); });
+
+  var totalBooks = logs.length;
+  var totalPages = sumOf(logs, 'pages');
+  var totalPrice = sumOf(logs, 'price');
+  var avgPages = totalBooks ? Math.round(totalPages / totalBooks) : 0;
+
+  // 直近12か月
+  var now = new Date();
+  var months = [], i;
+  for (i = 11; i >= 0; i--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    var y = d.getFullYear(), m = d.getMonth() + 1;
+    months.push({ y: y, m: m, n: logsIn(y, m).length });
+  }
+  var maxN = months.reduce(function (a, x) { return Math.max(a, x.n); }, 0) || 1;
+  var best = months.reduce(function (a, x) { return x.n > a.n ? x : a; }, months[0]);
+
+  // つづけている月数
+  var streak = 0;
+  for (i = months.length - 1; i >= 0; i--) { if (months[i].n > 0) streak++; else break; }
+
+  var bars = months.map(function (x) {
+    var h = Math.round(x.n / maxN * 100);
+    var isNow = x.y === now.getFullYear() && x.m === now.getMonth() + 1;
+    return '<div class="bar-col">' +
+      '<span class="bar-val">' + (x.n || '') + '</span>' +
+      '<div class="bar' + (isNow ? ' now' : '') + '" style="height:' + Math.max(h, x.n ? 8 : 2) + '%"></div>' +
+      '<span class="bar-cap">' + x.m + '</span></div>';
+  }).join('');
+
+  box.innerHTML =
+    '<section class="card">' +
+      '<div class="card-head"><h2 class="card-title">🪙 いままでの ごうけい</h2></div>' +
+      '<div class="kpis">' +
+        '<div class="kpi"><b>' + fmtNum(totalBooks) + '</b><span>さつ</span></div>' +
+        '<div class="kpi"><b>' + fmtNum(totalPages) + '</b><span>ページ</span></div>' +
+        '<div class="kpi"><b>' + fmtNum(totalPrice) + '</b><span>えん</span></div>' +
+        '<div class="kpi"><b>' + fmtNum(avgPages) + '</b><span>1さつの へいきん ページ</span></div>' +
+      '</div>' +
+    '</section>' +
+    '<section class="card">' +
+      '<div class="card-head"><h2 class="card-title">📅 つきごとの さっすう（12か月）</h2></div>' +
+      '<div class="bars">' + bars + '</div>' +
+      '<p class="muted tiny center" style="margin-top:8px">' +
+        (best && best.n ? 'いちばん よんだ月：' + best.y + '年' + best.m + '月（' + best.n + 'さつ）' : 'これから きろくして いこう！') +
+      '</p>' +
+    '</section>' +
+    '<section class="card">' +
+      '<div class="card-head"><h2 class="card-title">🔥 つづけて いる ようす</h2></div>' +
+      '<div class="kpis">' +
+        '<div class="kpi"><b>' + streak + '</b><span>れんぞく した 月</span></div>' +
+        '<div class="kpi"><b>' + records.length + '</b><span>がくしゅうログの けんすう</span></div>' +
+        '<div class="kpi"><b>' + Math.round(activeMs / 60000) + '</b><span>きろくに つかった 分</span></div>' +
+      '</div>' +
+      '<p class="muted tiny" style="margin-top:10px">' +
+        'がくしゅうログ（study.v1）は この きかいの なかだけに たまります。' +
+      '</p>' +
+    '</section>';
+}
+
+/* ============================================================
+   8. 本を きろくする（ISBN 検索・入力）
+   ============================================================ */
+var entryState = { isbn: '', title: '', author: '', pages: '', price: '', rating: 0, memo: '' };
+
+function resetEntry(isbn) {
+  entryState = { isbn: isbn || '', title: '', author: '', pages: '', price: '', rating: 0, memo: '' };
+}
+
+function renderEntry() {
+  $('#entry-isbn').value = entryState.isbn;
+  $('#entry-title').value = entryState.title;
+  $('#entry-author').value = entryState.author;
+  $('#entry-pages').value = entryState.pages;
+  $('#entry-price').value = entryState.price;
+  $('#entry-memo').value = entryState.memo;
+  $('#entry-stars').innerHTML = starsHTML(entryState.rating, '__entry__', '30px');
+  ['#entry-title', '#entry-pages', '#entry-price'].forEach(function (s) { $(s).classList.remove('error'); });
+
+  // えらんでいる年月が「いま」と ちがうときは、どの月に きろくされるか しらせる
+  var now = new Date();
+  var note = $('#entry-month-note');
+  var other = !(selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1);
+  note.hidden = !other;
+  if (other) {
+    note.innerHTML = '<span class="chip gold">この きろくは ' + selectedYear + '年' + selectedMonth + '月に なります</span>';
+  }
+}
+
+function onEntryHide() {
+  // 1冊も きろく せずに はなれた → 学習ログは のこさない（仕様書 §5.4）
+  Study.cancel();
+  $('#lookup-result').innerHTML = '';
+}
+
+/* ---- ISBN の たしかめ ---- */
+function ean13Valid(code) {
+  if (!/^\d{13}$/.test(code)) return false;
+  var sum = 0;
+  for (var i = 0; i < 12; i++) sum += (+code[i]) * (i % 2 ? 3 : 1);
+  return ((10 - (sum % 10)) % 10) === +code[12];
+}
+function isbn10to13(s) {
+  var core = s.replace(/[^0-9X]/gi, '');
+  if (core.length !== 10) return '';
+  var base = '978' + core.slice(0, 9);
+  var sum = 0;
+  for (var i = 0; i < 12; i++) sum += (+base[i]) * (i % 2 ? 3 : 1);
+  return base + ((10 - (sum % 10)) % 10);
+}
+function toIsbn13(input) {
+  var s = String(input || '').replace(/[^0-9Xx]/g, '').toUpperCase();
+  if (s.length === 13) return ean13Valid(s) ? s : '';
+  if (s.length === 10) return isbn10to13(s);
+  return '';
+}
+
+/* ---- 書誌データの とりよせ ---- */
+function fetchWithTimeout(url, ms) {
+  var ctrl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms || 8000);
+  return fetch(url, ctrl ? { signal: ctrl.signal } : undefined)
+    .then(function (r) { clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r; })
+    .catch(function (e) { clearTimeout(timer); throw e; });
+}
+function toHalfWidth(s) {
+  return String(s || '').replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+}
+function extractNum(v) {
+  var n = parseInt(toHalfWidth(v).replace(/[^0-9]/g, ''), 10);
+  return isFinite(n) ? n : 0;
+}
+/** 説明文などから「◯◯ページ」を ひろう（あてにならないので さいごの手だん） */
+function scanPageNums(text) {
+  if (!text) return [];
+  var t = toHalfWidth(text);
+  var re = /(\d{1,4})\s*(?:p\b|ページ|頁|ｐ)|(?:ページ数|全)\s*[:：]?\s*(\d{1,4})/gi;
+  var out = [], m;
+  while ((m = re.exec(t)) !== null) {
+    var n = parseInt(m[1] || m[2], 10);
+    if (isFinite(n) && n >= 8 && n <= 5000) out.push(n);
+  }
+  return out;
+}
+function cleanAuthor(s) {
+  if (!s) return '';
+  var c = String(s)
+    .replace(/(\d{4}\s*-\s*\d{4}|\d{4}\s*-\s*|\s*-\s*\d{4})/g, '')
+    .replace(/[著編訳]|監修|ほか|イラスト|作絵|文\/|絵\//g, '')
+    .replace(/[／,，、．.\[\]()（）]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  var parts = [];
+  c.split(' ').forEach(function (p) { if (p && parts.indexOf(p) < 0) parts.push(p); });
+  // 「山田太郎 山田」のように 片方が もう片方に ふくまれる ものを へらす
+  parts = parts.filter(function (x) {
+    return !parts.some(function (o) { return o !== x && o.indexOf(x) >= 0; });
+  });
+  return parts.join(' ').trim();
+}
+
+/**
+ * 3つの API から しらべる。
+ * ページ数・ねだんは「たしかな出どころ」を 先に つかい、説明文からの ひろい読みは
+ * ほかに 何も なかった ときだけ つかう（大きい数を むやみに ひろわない）。
+ */
+function lookupBook(isbn13) {
+  var res = { title: '', author: '', pages: 0, price: 0, found: false };
+  var pagesAuth = [], pagesScan = [], prices = [];
+
+  var pGoogle = fetchWithTimeout('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn13, 8000)
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data || !data.items || !data.items.length) return;
+      var v = data.items[0], info = v.volumeInfo || {};
+      res.found = true;
+      if (!res.title && info.title) res.title = info.title + (info.subtitle ? ' ' + info.subtitle : '');
+      if (!res.author && info.authors) res.author = cleanAuthor(info.authors.join(' '));
+      if (info.pageCount) pagesAuth.push(toInt(info.pageCount));
+      if (v.saleInfo && v.saleInfo.listPrice && v.saleInfo.listPrice.amount) {
+        prices.push({ n: extractNum(v.saleInfo.listPrice.amount), rank: 2 });
+      }
+      if (info.description) pagesScan = pagesScan.concat(scanPageNums(info.description));
+    })['catch'](function () {});
+
+  var pOpenBD = fetchWithTimeout('https://api.openbd.jp/v1/get?isbn=' + isbn13, 8000)
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data || !data[0]) return;
+      var rec = data[0], sum = rec.summary || {}, onix = rec.onix || {};
+      res.found = true;
+      if (sum.title) res.title = sum.title + (sum.volume ? ' ' + sum.volume : '');
+      if (sum.author) res.author = cleanAuthor(sum.author);
+      try {
+        var ext = onix.DescriptiveDetail && onix.DescriptiveDetail.Extent;
+        if (Array.isArray(ext)) {
+          ext.forEach(function (e) {
+            // ページを あらわす ExtentType だけを ひろう
+            if (['00', '05', '06', '07', '08', '11'].indexOf(String(e.ExtentType)) >= 0) {
+              var n = extractNum(e.ExtentValue);
+              if (n > 0) pagesAuth.push(n);
             }
-            if (progress) progress.style.width = Math.min(100, (count / goal) * 100) + "%";
-            
-            if (grid) { grid.innerHTML = ""; const icon = STAMPS[selectedMonth] || "💮"; for (let i = 0; i < 36; i++) { const cell = document.createElement('div'); cell.className = "stamp-cell" + (i < count ? " filled" : ""); if (i < count) cell.innerText = icon; grid.appendChild(cell); } }
+          });
         }
-
-        function renderBookList() {
-            const list = document.getElementById('book-list'), headEl = document.getElementById('log-month-header');
-            if(headEl) headEl.innerText = `${selectedYear}年 ${selectedMonth}月`;
-            const monthlyLogs = logs.filter(l => { if (!l) return false; const d = new Date(l.timestamp || l.date); return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth; });
-            if (document.getElementById('log-monthly-books')) document.getElementById('log-monthly-books').innerText = monthlyLogs.length;
-            if (!list) return;
-            if (monthlyLogs.length === 0) { list.innerHTML = `<div class="py-14 text-gray-400 font-bold text-sm text-center">📚 この月のきろくはありません</div>`; return; }
-            list.innerHTML = monthlyLogs.map(book => `
-                <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between gap-2 mb-1 relative text-left">
-                    <div class="flex-1 overflow-hidden text-left">
-                        <div class="flex items-center gap-1.5 mb-0.5"><span class="text-[7px] font-black px-1.5 py-0.5 bg-[#FFDEE9] text-[#FF6B6B] rounded-full shrink-0">${book.date.split('/')[2]}日</span>
-                        <div class="font-black text-[#4E342E] text-[10px] truncate flex-1">${book.title}</div></div>
-                        <div class="flex items-center gap-2 text-[8px] text-gray-400"><div class="truncate flex-1">${book.author}</div><div class="text-[#29B6F6] font-black">${book.pages}p / ${book.price}円</div></div>
-                    </div>
-                    <div class="flex flex-col items-end gap-0.5 shrink-0 text-left">
-                        <button onclick="deleteEntry(${book.id})" class="text-gray-300 text-[12px] p-1 font-bold">❌</button>
-                        <div class="flex gap-0.5 text-left">${[1, 2, 3, 4, 5].map(star => `<button onclick="updateRating(${book.id}, ${star})" class="text-sm ${star <= (book.rating || 0) ? 'text-[#FFB800]' : 'text-gray-200'}">★</button>`).join('')}</div>
-                    </div>
-                </div>`).join('');
+      } catch (e) {}
+      try {
+        var ps = onix.ProductSupply && onix.ProductSupply.SupplyDetail && onix.ProductSupply.SupplyDetail.Price;
+        if (Array.isArray(ps)) {
+          ps.forEach(function (p) {
+            var n = extractNum(p.PriceAmount);
+            if (n > 0) prices.push({ n: n, rank: 1 });
+          });
         }
+      } catch (e) {}
+    })['catch'](function () {});
 
-        // --- 通知・コピー・保存・読み込み ---
-        function showNotice(msg) {
-            const bar = document.getElementById('notice-msg');
-            if(!bar) return;
-            bar.innerText = msg; bar.classList.add('show');
-            setTimeout(() => bar.classList.remove('show'), 3000);
+  // 国立国会図書館（CORS が とおらない かんきょうも あるため、だめでも だまって すすむ）
+  var pNDL = fetchWithTimeout('https://ndlsearch.ndl.go.jp/api/opensearch?isbn=' + isbn13, 8000)
+    .then(function (r) { return r.text(); })
+    .then(function (txt) {
+      var doc = new DOMParser().parseFromString(txt, 'text/xml');
+      var item = doc.querySelector('item') || doc.getElementsByTagName('item')[0];
+      if (!item) return;
+      res.found = true;
+      var get = function (tag) {
+        var el = item.getElementsByTagName(tag)[0] ||
+                 item.getElementsByTagName('dc:' + tag)[0] ||
+                 item.getElementsByTagName('dcterms:' + tag)[0];
+        return el ? el.textContent : '';
+      };
+      if (!res.title) res.title = get('title');
+      if (!res.author) res.author = cleanAuthor(get('creator'));
+      var extent = get('extent');
+      if (extent) pagesAuth = pagesAuth.concat(scanPageNums(extent));
+      var desc = get('description');
+      if (desc) pagesScan = pagesScan.concat(scanPageNums(desc));
+      var price = get('price');
+      if (price) { var n = extractNum(price); if (n > 0) prices.push({ n: n, rank: 3 }); }
+    })['catch'](function () {});
+
+  var all = Promise.all([pGoogle, pOpenBD, pNDL].map(function (p) {
+    return p.then(function () { return null; }, function () { return null; });
+  }));
+
+  /* 3つの API を まちつづけると、1つが おそいだけで 子どもを ながく またせる。
+     ・ひつような ものが そろったら すぐ すすむ
+     ・そろわなくても 6びょうで うちきる                         */
+  var waited = new Promise(function (resolve) {
+    var timer = setInterval(function () {
+      if (res.title && pagesAuth.length && prices.length) { clearInterval(timer); resolve(); }
+    }, 120);
+    var stop = function () { clearInterval(timer); resolve(); };
+    all.then(stop, stop);
+    setTimeout(stop, 6000);
+  });
+
+  return waited.then(function () {
+    var auth = pagesAuth.filter(function (n) { return n > 0 && n <= 20000; });
+    var scan = pagesScan.filter(function (n) { return n > 0 && n <= 5000; });
+    var picked = auth.length ? auth : scan;
+    picked.sort(function (a, b) { return b - a; });
+    res.pages = picked.length ? picked[0] : 0;
+
+    prices.sort(function (a, b) { return a.rank - b.rank; });
+    res.price = prices.length ? prices[0].n : 0;
+
+    res.title = String(res.title || '').trim().slice(0, 120);
+    res.author = String(res.author || '').trim().slice(0, 80);
+    return res;
+  });
+}
+
+var lookingUp = false;
+function doLookup(rawIsbn, auto) {
+  var isbn = toIsbn13(rawIsbn);
+  var box = $('#lookup-result');
+  if (!isbn) {
+    box.innerHTML = '<p class="tiny" style="color:var(--danger)">978で はじまる 13けたの すうじを いれてね</p>';
+    $('#entry-isbn').classList.add('error');
+    return Promise.resolve();
+  }
+  $('#entry-isbn').classList.remove('error');
+  entryState.isbn = isbn;
+  $('#entry-isbn').value = isbn;
+
+  if (lookingUp) return Promise.resolve();
+  lookingUp = true;
+  box.innerHTML = '<p class="tiny muted">🔎 しらべています…</p>';
+
+  return lookupBook(isbn).then(function (r) {
+    lookingUp = false;
+    if (!r.title) {
+      box.innerHTML = '<p class="tiny" style="color:var(--danger)">みつかりませんでした。' +
+        '下の らんに じぶんで かいて きろく できます。</p>';
+      Study.markLookup('manual');
+      return;
+    }
+    entryState.title  = r.title;
+    entryState.author = r.author || 'ふめい';
+    if (r.pages) entryState.pages = String(r.pages);
+    if (r.price) entryState.price = String(r.price);
+    renderEntry();
+    Study.markLookup('auto');
+
+    var missing = [];
+    if (!r.pages) missing.push('ページ');
+    if (!r.price) missing.push('ねだん');
+    box.innerHTML =
+      '<div class="card" style="border-color:var(--blue-soft);background:#fff;padding:10px">' +
+        '<span class="chip blue">みつけた！</span>' +
+        '<p style="font-size:14px;font-weight:900;margin-top:6px">' + esc(r.title) + '</p>' +
+        (missing.length
+          ? '<p class="tiny" style="color:var(--danger);margin-top:4px">※ ' + esc(missing.join('と')) +
+            ' が わからなかったよ。本を みて かいてね</p>'
+          : '') +
+      '</div>';
+    if (!r.pages) $('#entry-pages').classList.add('error');
+    if (!r.price) $('#entry-price').classList.add('error');
+    if (auto) playBeep();
+  })['catch'](function () {
+    lookingUp = false;
+    box.innerHTML = '<p class="tiny" style="color:var(--danger)">インターネットに つながらなかったので、' +
+      'じぶんで かいて きろくしてね</p>';
+    Study.markLookup('manual');
+  });
+}
+
+function saveBook() {
+  var title  = $('#entry-title').value.trim();
+  var author = $('#entry-author').value.trim();
+  var pages  = $('#entry-pages').value.trim();
+  var price  = $('#entry-price').value.trim();
+  var memo   = $('#entry-memo').value.trim();
+
+  ['#entry-title', '#entry-pages'].forEach(function (s) { $(s).classList.remove('error'); });
+  if (!title) {
+    $('#entry-title').classList.add('error'); $('#entry-title').focus();
+    toast('本の なまえを いれてね'); return;
+  }
+  if (!pages || toInt(pages) <= 0) {
+    $('#entry-pages').classList.add('error'); $('#entry-pages').focus();
+    toast('ページすうを いれてね'); return;
+  }
+
+  var isbn = toIsbn13(entryState.isbn);
+  var dup = logs.filter(function (b) {
+    return (isbn && b.isbn === isbn) || normalizeTitle(b.title) === normalizeTitle(title);
+  })[0];
+
+  var proceed = dup
+    ? confirmDialog('おなじ本が あります',
+        '「' + esc(dup.title) + '」は ' + esc(dup.date) + ' に きろく されているよ。<br>それでも きろく しますか？',
+        'きろくする')
+    : Promise.resolve(true);
+
+  proceed.then(function (ok) {
+    if (!ok) return;
+    var when = recordDate();
+    var book = {
+      id: String(Date.now()) + '-' + Math.floor(Math.random() * 1000),
+      title: title.slice(0, 120),
+      author: (author || 'ふめい').slice(0, 80),
+      pages: clamp(toInt(pages), 0, 20000),
+      price: clamp(toInt(price), 0, 1000000),
+      rating: clamp(toInt(entryState.rating), 0, 5),
+      memo: memo.slice(0, 200),
+      isbn: isbn,
+      timestamp: when.getTime(),
+      date: fmtDate(when)
+    };
+    logs.unshift(book);
+    saveLogs();
+
+    /* 学習ログ study.v1 を のこす（保存のみ。外部送信はしない） */
+    Study.complete(book);
+
+    var y = when.getFullYear(), m = when.getMonth() + 1;
+    var count = logsIn(y, m).length;
+    var goal = goalOf(y, m);
+    var key = monthKey(y, m);
+    var firstTime = count >= goal && !meta.celebrated[key];
+
+    resetEntry('');
+    // 記録がおわったので、ホームまで もどす
+    backToRoot();
+
+    if (firstTime) {
+      meta.celebrated[key] = true;
+      saveMeta();
+      confetti();
+      playFanfare();
+      celebrate('🎊', 'もくひょう たっせい！', m + '月に ' + count + 'さつ よんだよ');
+    } else {
+      playFanfare();
+      celebrate('🎉', 'きろく したよ！', title.length > 16 ? title.slice(0, 16) + '…' : title);
+    }
+  });
+}
+
+/** きろくの日づけ。えらんでいる月が「いま」でないときは、その月の日に そろえる */
+function recordDate() {
+  var now = new Date();
+  if (selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1) return now;
+  var lastDay = new Date(selectedYear, selectedMonth, 0).getDate();  // その月の さいごの日
+  return new Date(selectedYear, selectedMonth - 1, Math.min(now.getDate(), lastDay), 12, 0, 0);
+}
+
+/** かいそうの いちばん上（ルート）へ もどす */
+function backToRoot() {
+  var steps = navIndex;
+  if (steps > 0) { history.go(-steps); }
+  else paint(null);
+}
+
+/* ============================================================
+   9. カメラ（バーコード）
+   ============================================================ */
+var Scanner = {
+  active: false, busy: false,
+  stream: null, video: null, detector: null, raf: 0,
+  usingQuagga: false, track: null, torchOn: false,
+
+  start: function () {
+    var self = this;
+    if (this.active) return;
+    this.active = true; this.busy = false;
+    setIdle('カメラの じゅんびを しています…');
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setIdle('この きかいでは カメラが つかえません。「ばんごうで いれる」を つかってね');
+      return;
+    }
+    this.detectorReady().then(function (det) {
+      if (!self.active) return;
+      if (det) return self.startNative(det);
+      return self.startQuagga();
+    })['catch'](function (err) {
+      console.warn('[scan]', err);
+      self.fail(err);
+    });
+  },
+
+  detectorReady: function () {
+    if (!('BarcodeDetector' in window)) return Promise.resolve(null);
+    return window.BarcodeDetector.getSupportedFormats()
+      .then(function (fmts) {
+        return fmts.indexOf('ean_13') >= 0 ? new window.BarcodeDetector({ formats: ['ean_13'] }) : null;
+      })['catch'](function () { return null; });
+  },
+
+  startNative: function (det) {
+    var self = this;
+    this.detector = det;
+    return navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    }).then(function (stream) {
+      if (!self.active) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+      self.stream = stream;
+      self.track = stream.getVideoTracks()[0] || null;
+      var v = document.createElement('video');
+      v.setAttribute('playsinline', '');            // iOS で 全画面に ならないように
+      v.setAttribute('muted', '');
+      v.playsInline = true; v.muted = true; v.autoplay = true;
+      v.srcObject = stream;
+      $('#scan-stage').insertBefore(v, $('#scan-stage').firstChild);
+      self.video = v;
+      return v.play();
+    }).then(function () {
+      if (!self.active) return;
+      self.ready();
+      var loop = function () {
+        if (!self.active || !self.video) return;
+        self.raf = requestAnimationFrame(loop);
+        if (self.busy || self.video.readyState < 2) return;
+        self.busy = true;
+        self.detector.detect(self.video).then(function (codes) {
+          self.busy = false;
+          if (codes && codes.length) self.onCode(codes[0].rawValue);
+        })['catch'](function () { self.busy = false; });
+      };
+      self.raf = requestAnimationFrame(loop);
+    });
+  },
+
+  startQuagga: function () {
+    var self = this;
+    return loadScript('vendor/quagga.min.js').then(function () {
+      if (!self.active) return;
+      if (typeof Quagga === 'undefined') throw new Error('quagga missing');
+      self.usingQuagga = true;
+      return new Promise(function (resolve, reject) {
+        Quagga.init({
+          inputStream: {
+            name: 'Live', type: 'LiveStream',
+            target: $('#scan-stage'),
+            constraints: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+            area: { top: '22%', bottom: '22%', left: '6%', right: '6%' }
+          },
+          decoder: { readers: ['ean_reader'] },
+          frequency: 10, numOfWorkers: 2,
+          locator: { patchSize: 'medium', halfSample: true }
+        }, function (err) {
+          if (err) { reject(err); return; }
+          if (!self.active) { try { Quagga.stop(); } catch (e) {} resolve(); return; }
+          Quagga.start();
+          Quagga.onDetected(self.quaggaHandler);
+          self.ready();
+          resolve();
+        });
+      });
+    });
+  },
+
+  quaggaHandler: function (data) {
+    if (data && data.codeResult) Scanner.onCode(data.codeResult.code);
+  },
+
+  ready: function () {
+    $('#scan-idle').hidden = true;
+    $('#scan-frame').hidden = false;
+    $('#scan-hint').hidden = false;
+    // ライトが つかえるか
+    try {
+      if (this.track && this.track.getCapabilities) {
+        var caps = this.track.getCapabilities();
+        if (caps && caps.torch) $('#torch-btn').hidden = false;
+      }
+    } catch (e) {}
+  },
+
+  fail: function (err) {
+    var name = (err && err.name) || '';
+    var msg = 'カメラが つかえませんでした。「ばんごうで いれる」を つかってね';
+    if (name === 'NotAllowedError' || name === 'SecurityError') {
+      msg = 'カメラを つかう きょかが ありません。ブラウザの せっていから きょかしてね';
+    } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+      msg = 'カメラが みつかりませんでした。「ばんごうで いれる」を つかってね';
+    }
+    setIdle(msg);
+    this.stopMedia();
+  },
+
+  onCode: function (code) {
+    if (!this.active || this.busy === 'done') return;
+    code = String(code || '').replace(/[^0-9]/g, '');
+    if (code.length !== 13) return;
+    if (/^19[12]/.test(code)) {                       // 日本の本の「ねだん」バーコード
+      toast('それは ねだんの バーコードだよ。上の 978 の ほうを よんでね');
+      return;
+    }
+    if (!/^97[89]/.test(code) || !ean13Valid(code)) return;
+
+    this.busy = 'done';
+    playBeep();
+    $('#scan-ok').classList.add('show');
+    var self = this;
+    setTimeout(function () {
+      $('#scan-ok').classList.remove('show');
+      self.stop();
+      resetEntry(code);
+      navGo('entry', {});
+      doLookup(code, true);
+    }, 260);
+  },
+
+  toggleTorch: function () {
+    if (!this.track || !this.track.applyConstraints) return;
+    var self = this;
+    this.torchOn = !this.torchOn;
+    this.track.applyConstraints({ advanced: [{ torch: this.torchOn }] })['catch'](function () {
+      self.torchOn = false;
+      toast('ライトが つかえません');
+    });
+  },
+
+  stopMedia: function () {
+    if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; }
+    if (this.usingQuagga && typeof Quagga !== 'undefined') {
+      try { Quagga.offDetected(this.quaggaHandler); } catch (e) {}
+      try { Quagga.stop(); } catch (e) {}
+    }
+    this.usingQuagga = false;
+    if (this.stream) {
+      try { this.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+      this.stream = null;
+    }
+    this.track = null; this.torchOn = false;
+    if (this.video) { try { this.video.srcObject = null; this.video.remove(); } catch (e) {} this.video = null; }
+    // Quagga が おいていった映像・キャンバスを かたづける
+    $$('#scan-stage video, #scan-stage canvas').forEach(function (el) { el.remove(); });
+  },
+
+  stop: function () {
+    this.active = false; this.busy = false;
+    this.stopMedia();
+    $('#scan-idle').hidden = false;
+    $('#scan-frame').hidden = true;
+    $('#scan-hint').hidden = true;
+    $('#torch-btn').hidden = true;
+    $('#scan-ok').classList.remove('show');
+  }
+};
+
+function setIdle(msg) {
+  $('#scan-idle').hidden = false;
+  $('#scan-idle-msg').textContent = msg;
+}
+function onScanShow() {
+  Study.begin('scan');
+  Scanner.start();
+}
+function onScanHide(nextKey) {
+  Scanner.stop();
+  // 「本を きろくする」へ すすむ ときは 記録セッションを つづける。
+  // それ以外（ホームへ もどる など）は、1冊も きろく していないので やめる。
+  if (nextKey !== 'entry') Study.cancel();
+}
+
+var loadedScripts = {};
+function loadScript(src) {
+  if (loadedScripts[src]) return loadedScripts[src];
+  loadedScripts[src] = new Promise(function (resolve, reject) {
+    var s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = function () { resolve(); };
+    s.onerror = function () { loadedScripts[src] = null; reject(new Error('load failed: ' + src)); };
+    document.head.appendChild(s);
+  });
+  return loadedScripts[src];
+}
+
+/* ============================================================
+   10. データの もちだし・とりこみ
+   ============================================================ */
+function exportData() {
+  if (!logs.length) { toast('きろくが ありません'); return; }
+  try {
+    var payload = {
+      app: 'reading-books', version: APP_VERSION, exportedAt: new Date().toISOString(),
+      logs: logs, goals: goals, meta: { celebrated: meta.celebrated }
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var d = new Date();
+    a.href = url;
+    /* ファイル名は 半角英数にする。
+       すべて日本語の名前だと、ブラウザによっては「download」（拡張子なし）に
+       なってしまい、あとで よみこめなく なるため。 */
+    a.download = 'dokusho-chokinbako_' + d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast('ファイルに ほぞんしました');
+  } catch (e) {
+    toast('ほぞんに しっぱいしました');
+  }
+}
+
+function importData(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function (ev) {
+    var data;
+    try { data = JSON.parse(ev.target.result); }
+    catch (e) { toast('よみこめない ファイルでした'); return; }
+
+    if (!data || !Array.isArray(data.logs)) { toast('データの かたちが ちがいます'); return; }
+    var incoming = [];
+    for (var i = 0; i < data.logs.length; i++) {
+      var n = normalizeLog(data.logs[i], i);
+      if (n) incoming.push(n);
+    }
+    if (!incoming.length) { toast('きろくが 入っていません'); return; }
+
+    showDialog({
+      emoji: '📂',
+      title: incoming.length + 'さつ ぶんの きろくが あります',
+      body: 'いまの きろくは ' + logs.length + 'さつです。<br>どちらに しますか？',
+      buttons: [
+        { label: 'やめる', value: 'cancel' },
+        { label: 'くわえる', value: 'merge', cls: 'btn-blue' },
+        { label: 'いれかえる', value: 'replace', cls: 'btn-danger' }
+      ]
+    }).then(function (choice) {
+      if (choice === 'merge') {
+        var seen = {};
+        logs.forEach(function (b) { seen[b.id] = true; });
+        var added = 0;
+        incoming.forEach(function (b) {
+          if (!seen[b.id]) { logs.push(b); seen[b.id] = true; added++; }
+        });
+        Object.keys(data.goals || {}).forEach(function (k) {
+          if (goals[k] === undefined) goals[k] = data.goals[k];
+        });
+        saveLogs(); saveGoals();
+        toast(added + 'さつ くわえました');
+        paint(null);
+      } else if (choice === 'replace') {
+        confirmDialog('ぜんぶ いれかえます',
+          'いまの きろく ' + logs.length + 'さつは きえます。よろしいですか？',
+          'いれかえる', true).then(function (ok) {
+          if (!ok) return;
+          logs = incoming;
+          goals = (data.goals && typeof data.goals === 'object' && !Array.isArray(data.goals)) ? data.goals : {};
+          if (data.meta && data.meta.celebrated) meta.celebrated = data.meta.celebrated;
+          saveLogs(); saveGoals(); saveMeta();
+          toast('ふくげん しました');
+          paint(null);
+        });
+      }
+    });
+  };
+  reader.onerror = function () { toast('よみこみに しっぱいしました'); };
+  reader.readAsText(file);
+}
+
+function copyForSpreadsheet() {
+  if (!logs.length) { toast('きろくが ありません'); return; }
+  var rows = logs.slice().sort(function (a, b) { return a.timestamp - b.timestamp; });   // 古い順
+  var tsv = '日付\tタイトル\tかいた人\tおもしろさ\tページ数\tごうけいページ\tきんがく\tごうけいきんがく\tかんそう\n';
+  var sp = 0, sy = 0;
+  rows.forEach(function (b) {
+    sp += b.pages; sy += b.price;
+    tsv += [b.date, b.title, b.author, '⭐'.repeat(b.rating), b.pages, sp, b.price, sy,
+            b.memo.replace(/[\t\r\n]+/g, ' ')].join('\t') + '\n';
+  });
+
+  var done = function () { toast('ひょうに はりつけられる かたちで コピーしました'); };
+  var fail = function () { toast('コピーできませんでした'); };
+
+  if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+    navigator.clipboard.writeText(tsv).then(done, function () { legacyCopy(tsv) ? done() : fail(); });
+  } else {
+    legacyCopy(tsv) ? done() : fail();
+  }
+}
+function legacyCopy(text) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, text.length);
+    var ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch (e) { return false; }
+}
+
+function resetAll() {
+  confirmDialog('ほんとうに ぜんぶ けしますか？',
+    'よんだ本の きろく・もくひょう・スタンプが ぜんぶ きえます。<br>もとには もどせません。',
+    'ぜんぶ けす', true).then(function (ok) {
+    if (!ok) return;
+    /* 消すのは このアプリの キーだけ。
+       localStorage.clear() は つかわない（ほかの学習アプリの データを こわすため）。
+       共通の学習ログ `study.records.v1` も 消さない（仕様書 §1.2）。 */
+    try {
+      localStorage.removeItem(KEYS.logs);
+      localStorage.removeItem(KEYS.goals);
+      localStorage.removeItem(KEYS.meta);
+    } catch (e) {}
+    logs = []; goals = {};
+    meta = { celebrated: {}, sound: meta.sound };
+    saveMeta();
+    toast('きろくを ぜんぶ けしました');
+    navTab('home');
+  });
+}
+
+/* ============================================================
+   11. そうさ（クリック・入力）
+   ============================================================ */
+function onAction(act, el) {
+  switch (act) {
+    case 'tab':     navTab(el.getAttribute('data-tab')); break;
+    case 'go':      navGo(el.getAttribute('data-screen'), {}); break;
+    case 'back':    goBack(); break;
+
+    case 'entry': {
+      var mode = el.getAttribute('data-mode') || 'manual';
+      Study.begin(mode);
+      resetEntry('');
+      navGo('entry', {});
+      if (mode === 'manual') setTimeout(function () { $('#entry-title').focus(); }, 260);
+      else setTimeout(function () { $('#entry-isbn').focus(); }, 260);
+      break;
+    }
+    case 'lookup':  doLookup($('#entry-isbn').value, false); break;
+    case 'save':    saveBook(); break;
+
+    case 'detail':  navGo('detail', { id: el.getAttribute('data-id') }); break;
+
+    case 'rate': {
+      var id = el.getAttribute('data-id');
+      var star = toInt(el.getAttribute('data-star'));
+      if (id === '__entry__') {
+        entryState.rating = (entryState.rating === star) ? 0 : star;
+        $('#entry-stars').innerHTML = starsHTML(entryState.rating, '__entry__', '30px');
+      } else {
+        var b = findLog(id);
+        if (b) {
+          b.rating = (b.rating === star) ? 0 : star;
+          saveLogs();
+          paint(null);
         }
+      }
+      break;
+    }
 
-        function copyForSpreadsheet() {
-            if (!logs || logs.length === 0) { showNotice("きろくが ありません"); return; }
-            let tsv = "日付\tタイトル\tかいた人\tかんそう\tページ数\tごうけいページ\tきんがく\tごうけいきんがく\n";
-            let runningPages = 0, runningPrice = 0;
-            [...logs].reverse().forEach(b => {
-                const p = parseInt(b.pages) || 0, pr = parseInt(b.price) || 0;
-                runningPages += p; runningPrice += pr;
-                tsv += `${b.date}\t${b.title}\t${b.author}\t${"⭐".repeat(b.rating || 0)}\t${p}\t${runningPages}\t${pr}\t${runningPrice}\n`;
-            });
-            const ta = document.createElement("textarea");
-            ta.value = tsv; ta.style.position = "fixed"; ta.style.left = "-9999px"; ta.style.top = "0";
-            document.body.appendChild(ta); ta.select();
-            try {
-                if (document.execCommand('copy')) showNotice("データをコピーしました");
-                else showNotice("コピーにしっぱいしました");
-            } catch (err) { showNotice("コピーできませんでした"); }
-            document.body.removeChild(ta);
-        }
+    case 'save-memo': {
+      var bm = findLog(el.getAttribute('data-id'));
+      if (bm) { bm.memo = $('#detail-memo').value.trim().slice(0, 200); saveLogs(); toast('かんそうを ほぞんしました'); }
+      break;
+    }
 
-        function saveDataFile() {
-            if (!logs || logs.length === 0) { showNotice("きろくが ありません"); return; }
-            try {
-                const data = { logs, goals, version: "v1", date: new Date().toISOString() };
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(blob);
-                a.download = `どくしょのきろく_${new Date().toLocaleDateString('ja-JP').replace(/\//g,'-')}.json`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                showNotice("バックアップしました！");
-            } catch(e) { showNotice("ほぞんに しっぱいしました"); }
-        }
+    case 'delete': {
+      var did = el.getAttribute('data-id');
+      var bd = findLog(did);
+      if (!bd) return;
+      confirmDialog('この きろくを けしますか？', '「' + esc(bd.title) + '」を けします。', 'けす', true)
+        .then(function (ok) {
+          if (!ok) return;
+          logs = logs.filter(function (x) { return x.id !== did; });
+          saveLogs();
+          toast('けしました');
+          goBack();
+        });
+      break;
+    }
 
-        function loadDataFile(input) {
-            const f = input.files[0]; if (!f) return;
-            const r = new FileReader();
-            r.onload = (e) => {
-                try {
-                    const d = JSON.parse(e.target.result);
-                    if (d.logs && Array.isArray(d.logs)) {
-                        logs = d.logs; goals = d.goals || {};
-                        localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
-                        localStorage.setItem(STORAGE_KEY_GOALS, JSON.stringify(goals));
-                        renderAll(); showNotice("復元しました！");
-                    } else { showNotice("データのかたちが ちがいます"); }
-                } catch (err) { showNotice("しっぱいしました"); }
-            };
-            r.readAsText(f); input.value = "";
-        }
+    case 'range':
+      listRange = el.getAttribute('data-range');
+      renderList();
+      break;
 
-        // --- 削除・リセット ---
-        function deleteEntry(id) { if (confirm("この きろくを けしても いいですか？")) { logs = logs.filter(b => b.id !== id); localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs)); renderAll(); showNotice("けしました"); } }
-        function showResetConfirm() { document.getElementById('reset-confirm-modal').classList.remove('hidden'); }
-        function hideResetConfirm() { document.getElementById('reset-confirm-modal').classList.add('hidden'); }
-        function resetAllDataActual() { localStorage.removeItem(STORAGE_KEY_LOGS); localStorage.removeItem(STORAGE_KEY_GOALS); logs = []; goals = {}; renderAll(); hideResetConfirm(); showNotice("すべてリセットしました"); }
+    case 'export': exportData(); break;
+    case 'import': $('#import-file').click(); break;
+    case 'copy':   copyForSpreadsheet(); break;
+    case 'reset':  resetAll(); break;
+    case 'torch':  Scanner.toggleTorch(); break;
 
-        function updateGoal(val) { const key = `${selectedYear}-${selectedMonth}`; goals[key] = parseInt(val) || 10; localStorage.setItem(STORAGE_KEY_GOALS, JSON.stringify(goals)); renderAll(); }
-        function switchTab(tab) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active')); const tabEl = document.getElementById('tab-' + tab), navEl = document.getElementById('nav-' + tab); if(tabEl) tabEl.classList.add('active'); if(navEl) navEl.classList.add('active'); if (tab !== 'home') stopScanner(); renderAll(); }
+    case 'toggle-sound':
+      meta.sound = !meta.sound;
+      saveMeta(); renderData();
+      if (meta.sound) playBeep();
+      toast(meta.sound ? 'おとを ならします' : 'おとを ならしません');
+      break;
 
-        // --- 最強の検索ロジック (ページ数・金額取得 徹底強化・完全復元版) ---
-        async function searchBookData(isbn) {
-            const la = document.getElementById('search-candidates');
-            la.innerHTML = `<div class="py-4 text-xs text-gray-500 font-black animate-pulse text-center">しらべています...</div>`;
-            
-            let res = { title: "", author: "", price: "" };
-            let pageCandidates = [];
-            let priceCandidates = [];
+    case 'install': doInstall(); break;
+  }
+}
 
-            // 1. Google Books API (詳細な説明文スキャン)
-            const fGoogle = fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`).then(r => r.json()).then(data => {
-                if (data.items && data.items.length > 0) {
-                    const info = data.items[0].volumeInfo;
-                    res.title = info.title || "";
-                    res.author = cleanAuthorName(info.authors?.join(' ') || "");
-                    if (info.pageCount) pageCandidates.push(parseInt(info.pageCount));
-                    if (data.items[0].saleInfo?.listPrice) priceCandidates.push(extractCleanNum(data.items[0].saleInfo.listPrice.amount));
-                    // 説明文の中からページ数を探す（最強ロジック）
-                    if (info.description) pageCandidates = pageCandidates.concat(scanPageNumsDeeply(info.description));
-                }
-            }).catch(() => {});
+document.addEventListener('click', function (ev) {
+  var el = ev.target.closest ? ev.target.closest('[data-act]') : null;
+  if (!el) return;
+  ev.preventDefault();
+  onAction(el.getAttribute('data-act'), el);
+});
 
-            // 2. openBD API (ONIX構造から精密取得)
-            const fOpenBD = fetch(`https://api.openbd.jp/v1/get?isbn=${isbn}`).then(r => r.json()).then(data => {
-                if (data && data[0]) {
-                    const b = data[0].summary, onix = data[0].onix;
-                    if (!res.title) res.title = b.title || "";
-                    if (!res.author) res.author = cleanAuthorName(b.author || "");
-                    if (b.pages) pageCandidates.push(extractCleanNum(b.pages));
-                    try {
-                        const exts = onix?.DescriptiveDetail?.Extent;
-                        if (exts && Array.isArray(exts)) {
-                            exts.forEach(e => {
-                                if (["00", "11", "07", "08", "06", "05"].includes(e.ExtentType)) {
-                                     pageCandidates.push(extractCleanNum(e.ExtentValue));
-                                }
-                            });
-                        }
-                    } catch(e) {}
-                    try {
-                        const prices = onix?.ProductSupply?.SupplyDetail?.Price;
-                        if (prices && Array.isArray(prices)) {
-                            prices.forEach(p => { if (p.PriceAmount) priceCandidates.push(extractCleanNum(p.PriceAmount)); });
-                        }
-                    } catch(e) {}
-                }
-            }).catch(() => {});
+$('#hdr-back').addEventListener('click', goBack);
 
-            // 3. NDL (国立国会図書館) - 取得ロジック強化
-            const fNDL = fetch(`https://ndlsearch.ndl.go.jp/api/opensearch?isbn=${isbn}`).then(async r => {
-                const txt = await r.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(txt, "text/xml");
-                const item = xmlDoc.getElementsByTagName("item")[0];
-                // iOSなど一部環境でのタグ名取得の安全策
-                const getItem = (doc) => doc.querySelector("item") || doc.getElementsByTagName("item")[0];
-                const targetItem = getItem(xmlDoc);
+/* 入力の うけとり */
+function bindEntryInput(sel, key) {
+  var el = $(sel);
+  el.addEventListener('input', function () {
+    entryState[key] = el.value;
+    el.classList.remove('error');
+  });
+}
+bindEntryInput('#entry-isbn', 'isbn');
+bindEntryInput('#entry-title', 'title');
+bindEntryInput('#entry-author', 'author');
+bindEntryInput('#entry-pages', 'pages');
+bindEntryInput('#entry-price', 'price');
+bindEntryInput('#entry-memo', 'memo');
 
-                if (targetItem) {
-                    // タグ名を指定して安全に取得するヘルパー
-                    const getVal = (tag) => {
-                         const el = targetItem.getElementsByTagName(tag)[0] || targetItem.getElementsByTagName("dc:"+tag)[0] || targetItem.getElementsByTagName("dcterms:"+tag)[0];
-                         return el ? el.textContent : "";
-                    };
+$('#entry-isbn').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); doLookup($('#entry-isbn').value, false); }
+});
 
-                    const t = getVal("title");
-                    if (!res.title) res.title = t;
-                    
-                    const desc = getVal("description");
-                    if (desc) pageCandidates = pageCandidates.concat(scanPageNumsDeeply(desc));
-                    
-                    // extent (大きさ・容量) からページ数を抽出
-                    const extent = getVal("extent");
-                    if (extent) pageCandidates = pageCandidates.concat(scanPageNumsDeeply(extent));
-                    
-                    const priceText = getVal("price");
-                    if (priceText) priceCandidates.push(extractCleanNum(priceText));
-                }
-            }).catch(() => {});
+['#year-select', '#year-select-2'].forEach(function (sel) {
+  $(sel).addEventListener('change', function () {
+    selectedYear = toInt(this.value) || selectedYear;
+    paint(null);
+  });
+});
+['#month-select', '#month-select-2'].forEach(function (sel) {
+  $(sel).addEventListener('change', function () {
+    selectedMonth = clamp(toInt(this.value) || selectedMonth, 1, 12);
+    paint(null);
+  });
+});
+$('#goal-input').addEventListener('change', function () {
+  var v = clamp(toInt(this.value) || 10, 1, 99);
+  this.value = v;
+  goals[monthKey(selectedYear, selectedMonth)] = v;
+  saveGoals();
+  renderStamp();
+});
+var searchTimer = 0;
+$('#list-search').addEventListener('input', function () {
+  var v = this.value;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(function () { listQuery = v; renderList(); }, 180);
+});
+$('#import-file').addEventListener('change', function () {
+  var f = this.files && this.files[0];
+  this.value = '';
+  importData(f);
+});
 
-            await Promise.allSettled([fGoogle, fOpenBD, fNDL]);
+/* キーボードでも もどれるように（PC・そとづけキーボード） */
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  var t = e.target;
+  var typing = t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
+  if (typing && !dialogOpen()) { t.blur(); return; }
+  goBack();
+});
 
-            // 数字の選定 (大きい順にソートして最大値を採用)
-            const validPages = pageCandidates.filter(n => !isNaN(n) && n > 0).sort((a, b) => b - a);
-            const validPrices = priceCandidates.filter(n => !isNaN(n) && n > 0).sort((a, b) => b - a);
-            
-            // ページ数は最大のものを採用（本文＋あとがき等が反映されやすいため）
-            let finalPages = validPages.length > 0 ? validPages[0].toString() : "";
-            let finalPrice = validPrices.length > 0 ? validPrices[0].toString() : "";
-            
-            // 未取得項目を確認
-            const missing = [];
-            if (!res.title) missing.push('input-title');
-            if (!finalPages) missing.push('input-pages');
-            if (!finalPrice) missing.push('input-price');
+/* ============================================================
+   12. PWA（インストール・オフライン）
+   ============================================================ */
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  var row = $('#install-row');
+  if (row) row.hidden = false;
+});
+window.addEventListener('appinstalled', function () {
+  deferredPrompt = null;
+  var row = $('#install-row'); if (row) row.hidden = true;
+  toast('インストール できました！');
+});
 
-            if (res.title) {
-                la.innerHTML = `<div onclick="applyToForm('${res.title.replace(/'/g,"\\'")}', '${res.author.replace(/'/g,"\\'")}', '${finalPages}', '${finalPrice}')" class="p-3 bg-blue-50 border-2 border-blue-200 rounded-lg cursor-pointer hover:bg-blue-100 text-left">
-                    <span class="text-[9px] bg-blue-500 text-white px-2 py-0.5 rounded-full">みつけた！</span>
-                    <p class="text-sm font-black text-gray-800 line-clamp-1 mt-1">${res.title}</p>
-                    ${missing.length > 0 ? '<p class="text-[10px] text-red-500 font-bold mt-1">※たりない ところは 入力してね</p>' : ''}
-                </div>`;
-                applyToForm(res.title, res.author, finalPages, finalPrice);
-                
-                // 未取得項目を赤枠にする
-                if (!finalPages) document.getElementById('input-pages').classList.add('input-error');
-                if (!finalPrice) document.getElementById('input-price').classList.add('input-error');
-                
-            } else {
-                la.innerHTML = `<p class="py-4 text-xs text-gray-400 font-black text-center text-left">みつかりませんでした。</p>`;
-                applyToForm("", "", "", "");
-            }
-        }
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+         window.navigator.standalone === true;
+}
+function doInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
+    return;
+  }
+  showDialog({
+    emoji: '📲',
+    title: 'アプリとして つかう',
+    body: isIOS()
+      ? 'Safari の 下（または 右上）の <b>「共有」ボタン ⬆️</b> を おして、<br><b>「ホーム画面に追加」</b> を えらんでね。'
+      : 'ブラウザの メニュー（⋮）から <b>「アプリをインストール」</b> または <b>「ホーム画面に追加」</b> を えらんでね。',
+    buttons: [{ label: 'わかった', value: true, cls: 'btn-primary' }]
+  });
+}
 
-        function extractCleanNum(v) { 
-            if(!v) return 0;
-            const s = v.toString().replace(/[０-９]/g, m => String.fromCharCode(m.charCodeAt(0) - 0xFEE0));
-            const num = parseInt(s.replace(/[^0-9]/g, ''));
-            return isNaN(num) ? 0 : num;
-        }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    /* はじめて ひらいたときは Service Worker が あとから うけもつ（claim）ため
+       controllerchange が おきる。ここで よみこみ直すと、入力中の ないようが
+       きえてしまう。よみこみ直すのは「まえから うけもたれていた＝更新」のときだけ。 */
+    var wasControlled = !!navigator.serviceWorker.controller;
 
-        function scanPageNumsDeeply(t) { 
-            if(!t) return [];
-            const text = t.replace(/[０-９]/g, m => String.fromCharCode(m.charCodeAt(0) - 0xFEE0));
-            // 数字＋ページ、p、頁、枚、または「ページ数：数字」のパターン (matchAll不使用)
-            const regex = /(\d{1,4})\s*(?:p|ページ|頁|枚|p\.)|(?:ページ|p|page|Pages)[:：\s]*(\d{1,4})/gi;
-            let match;
-            const results = [];
-            while ((match = regex.exec(text)) !== null) {
-                const num = parseInt(match[1] || match[2]);
-                if (!isNaN(num) && num > 5) results.push(num);
-            }
-            return results;
-        }
-        
-        function cleanAuthorName(s) { 
-            if (!s) return ""; 
-            // 年号などの不要な情報を削除
-            let c = s.replace(/(\d{4}\s*-\s*\d{4}|\d{4}\s*-\s*|\s*-\s*\d{4})/g, '')
-                     .replace(/[著編訳]|監修|ほか|イラスト/g, '')
-                     .replace(/[／,，、．.\[\]\(\)（）]/g, ' ')
-                     .trim(); 
-            let p = [...new Set(c.split(/\s+/).filter(x => x.length > 0))]; 
-            return p.filter(x => !p.some(o => o !== x && o.includes(x))).join(' ').trim(); 
-        }
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      // あたらしい版が あれば、しずかに いれかえる
+      reg.addEventListener('updatefound', function () {
+        var sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener('statechange', function () {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            sw.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    })['catch'](function (err) { console.warn('[sw] register failed', err); });
 
-        function applyToForm(t, a, p, pr) { 
-            document.getElementById('input-title').value = t || ""; 
-            document.getElementById('input-author').value = a || ""; 
-            document.getElementById('input-pages').value = p || ""; 
-            document.getElementById('input-price').value = pr || "";
-            // エラー枠リセット
-            ['input-title', 'input-pages', 'input-price'].forEach(id => document.getElementById(id).classList.remove('input-error'));
-        }
+    var reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (reloaded || !wasControlled) return;
+      reloaded = true;
+      location.reload();
+    });
+  });
+}
 
-        function showManualModal(isbn = "") { 
-            document.getElementById('modal-overlay').classList.remove('hidden'); 
-            
-            // フォームのクリア処理
-            if(document.getElementById('input-isbn')) document.getElementById('input-isbn').value = isbn;
-            document.getElementById('input-title').value = "";
-            document.getElementById('input-author').value = "";
-            document.getElementById('input-pages').value = "";
-            document.getElementById('input-price').value = "";
-            
-            // 検索候補とエラー表示もクリア
-            document.getElementById('search-candidates').innerHTML = "";
-            ['input-pages', 'input-price'].forEach(id => document.getElementById(id).classList.remove('input-error'));
-        }
+/* ============================================================
+   13. はじまり
+   ============================================================ */
+window.addEventListener('pagehide', function () {
+  /* タブが すてられても こまらないように、ここで しまつを する。
+     1冊も きろくして いない とちゅうの セッションは、仕様書 §5.4 により のこさない。 */
+  Study.cancel();
+  Scanner.stop();
+});
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden && Scanner.active) Scanner.stop();
+});
 
-        function hideManualModal() { document.getElementById('modal-overlay').classList.add('hidden'); isProcessingBarcode = false; }
-        function lookupISBNFromInput() { const v = document.getElementById('input-isbn').value.trim().replace(/[^0-9]/g, ''); if (v.length >= 10) searchBookData(v); }
+function boot() {
+  loadAll();
+  fillYearMonth();
+  navInit();
 
-        function toggleScanner() { isScannerRunning ? stopScanner() : startScanner(); }
-        function stopScanner() {
-            isScannerRunning = false; isProcessingBarcode = false;
-            try { if(typeof Quagga !== 'undefined') Quagga.stop(); } catch(e) {}
-            document.querySelectorAll('video').forEach(v => { if (v.srcObject) v.srcObject.getTracks().forEach(t => t.stop()); v.remove(); });
-            const btn = document.getElementById('btn-text'); if(btn) btn.innerText = "カメラでバーコードをよむ"; 
-            const sc = document.getElementById('scanner-cover'); if(sc) sc.classList.remove('hidden');
-            const gb = document.getElementById('guide-box'); if(gb) gb.classList.add('hidden');
-            const so = document.getElementById('success-overlay'); if(so) so.style.display = "none";
-            const canvas = document.querySelector('#interactive canvas'); if (canvas) canvas.remove();
-        }
-        async function startScanner() {
-            if (isScannerRunning || typeof Quagga === 'undefined') return;
-            const btn = document.getElementById('btn-text'); if(btn) btn.innerText = "とめる";
-            try {
-                playFanfare(); // 音の初期化（許可取り）
-                Quagga.init({
-                    inputStream: { name: "Live", type: "LiveStream", target: document.querySelector('#interactive'), constraints: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, area: { top: "10%", bottom: "10%" } },
-                    decoder: { readers: ["ean_reader"] }, frequency: 10, numOfWorkers: 2, locator: { patchSize: "medium", halfSample: true }
-                }, (err) => {
-                    if (err) { stopScanner(); showNotice("カメラが使えません。"); return; }
-                    Quagga.start(); isScannerRunning = true; 
-                    document.getElementById('scanner-cover').classList.add('hidden');
-                    document.getElementById('guide-box').classList.remove('hidden');
-                });
-            } catch (e) { stopScanner(); }
-        }
-        
-        if(typeof Quagga !== 'undefined') {
-            Quagga.onDetected(data => { 
-                const code = data.codeResult.code; if (!code || isProcessingBarcode || code.length !== 13 || code.startsWith('192')) return;
-                isProcessingBarcode = true; playBeep(); document.getElementById('success-overlay').style.display = "flex"; 
-                setTimeout(() => { showManualModal(code); searchBookData(code); stopScanner(); }, 200); 
-            });
-        }
+  /* iOS(Safari)には beforeinstallprompt が ないので、案内を じぶんで出す。
+     Chrome では beforeinstallprompt が とどいた ときに 出す。 */
+  if (isIOS() && !isStandalone()) {
+    var row = $('#install-row'); if (row) row.hidden = false;
+  }
 
-        // 目標達成チェック
-        function checkGoalAchievement() {
-            const key = `${selectedYear}-${selectedMonth}`;
-            const goal = goals[key] || 10;
-            const monthlyLogs = logs.filter(l => { const d = new Date(l.timestamp || l.date); return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth; });
-            
-            if (monthlyLogs.length >= goal) {
-                confetti({
-                    particleCount: 200,
-                    spread: 100,
-                    origin: { y: 0.6 },
-                    colors: ['#FFD700', '#FFA500', '#FF4500', '#FFFFFF'], 
-                    zIndex: 3000 
-                });
-                document.getElementById('goal-achieved-modal').classList.remove('hidden');
-            }
-        }
+  // ホームがめんの ショートカットから ひらいたとき
+  try {
+    var p = new URLSearchParams(location.search).get('screen');
+    if (p === 'scan') navGo('scan', {});
+    else if (p && TABS.indexOf(p) >= 0) navTab(p);
+    if (p) history.replaceState({ app: 1, i: navIndex }, '', location.pathname);
+  } catch (e) {}
+}
 
-        function manualAddBook() {
-            const t = document.getElementById('input-title').value.trim(), p = document.getElementById('input-pages').value.trim(), pr = document.getElementById('input-price').value.trim(), a = document.getElementById('input-author').value.trim();
-            if(!t) { showNotice("なまえを いれてね"); return; }
-            if(!p || p === "0" || !pr || pr === "0") { 
-                showNotice("あいているところを かいてね");
-                if(!p || p==="0") document.getElementById('input-pages').classList.add('input-error');
-                if(!pr || pr==="0") document.getElementById('input-price').classList.add('input-error');
-                return; 
-            }
-            
-            const now = new Date();
-            const recordDate = new Date(selectedYear, selectedMonth - 1, now.getDate());
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
 
-            logs.unshift({ id: Date.now(), title: t, author: a || "ふめい", pages: p, price: pr, rating: 0, date: recordDate.toLocaleDateString('ja-JP'), timestamp: recordDate.getTime() });
-            localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs)); 
-            
-            renderAll(); 
-            playFanfare(); // ファンファーレ
-            
-            hideManualModal();
-
-            const key = `${selectedYear}-${selectedMonth}`;
-            const goal = goals[key] || 10;
-            const monthlyLogs = logs.filter(l => { const d = new Date(l.timestamp || l.date); return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth; });
-
-            if (monthlyLogs.length >= goal) {
-                 checkGoalAchievement(); 
-            } else {
-                 const cl = document.getElementById('celebration'); if(cl) { cl.classList.remove('hidden'); setTimeout(() => cl.classList.add('hidden'), 2500); } 
-            }
-        }
-        function updateRating(id, r) { logs = logs.map(b => b.id === id ? {...b, rating: r} : b); localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs)); renderAll(); }
-        function showHelp() { document.getElementById('help-modal').classList.remove('hidden'); }
-        function hideHelp() { document.getElementById('help-modal').classList.add('hidden'); }
-    </script>
+})();
+</script>
 </body>
 </html>

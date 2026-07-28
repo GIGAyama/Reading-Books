@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="どくしょ ちょきんばこ">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD9C7"/>
+      <stop offset="1" stop-color="#FFAB91"/>
+    </linearGradient>
+    <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE082"/>
+      <stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+    <linearGradient id="cover" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF8A65"/>
+      <stop offset="1" stop-color="#E64A19"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- コイン（本に入っていく貯金のイメージ） -->
+  <g transform="translate(256 132)">
+    <ellipse cx="0" cy="6" rx="62" ry="62" fill="#E69100" opacity="0.35"/>
+    <circle cx="0" cy="0" r="62" fill="url(#coin)" stroke="#E68A00" stroke-width="8"/>
+    <circle cx="0" cy="0" r="45" fill="none" stroke="#FFF3C4" stroke-width="5" opacity="0.85"/>
+    <g fill="none" stroke="#8D5B00" stroke-width="11" stroke-linecap="round">
+      <path d="M-22 -26 L0 -2 L22 -26"/>
+      <path d="M0 -2 L0 28"/>
+      <path d="M-20 4 L20 4"/>
+      <path d="M-20 18 L20 18"/>
+    </g>
+  </g>
+
+  <!-- 本（貯金箱） -->
+  <g transform="translate(256 322)">
+    <!-- 影 -->
+    <ellipse cx="0" cy="112" rx="176" ry="26" fill="#C1500F" opacity="0.22"/>
+
+    <!-- 背表紙・表紙 -->
+    <path d="M-196 -66 h392 a26 26 0 0 1 26 26 v122 a26 26 0 0 1 -26 26 h-392 a26 26 0 0 1 -26 -26 v-122 a26 26 0 0 1 26 -26 z"
+          fill="url(#cover)"/>
+
+    <!-- 左右のページ -->
+    <path d="M-186 -46 h172 v134 h-172 a10 10 0 0 1 -10 -10 v-114 a10 10 0 0 1 10 -10 z" fill="#FFFDF7"/>
+    <path d="M186 -46 h-172 v134 h172 a10 10 0 0 0 10 -10 v-114 a10 10 0 0 0 -10 -10 z" fill="#FFF6E8"/>
+
+    <!-- 中央のとじ目 -->
+    <rect x="-14" y="-52" width="28" height="146" rx="10" fill="#D84315"/>
+
+    <!-- 文字（行） -->
+    <g stroke="#FFCCBC" stroke-width="12" stroke-linecap="round">
+      <path d="M-162 -10 h116"/>
+      <path d="M-162 22 h116"/>
+      <path d="M-162 54 h78"/>
+      <path d="M46 -10 h116"/>
+      <path d="M46 22 h116"/>
+      <path d="M46 54 h78"/>
+    </g>
+
+    <!-- コイン投入口 -->
+    <rect x="-72" y="-84" width="144" height="26" rx="13" fill="#4E342E" opacity="0.85"/>
+    <rect x="-64" y="-78" width="128" height="8" rx="4" fill="#8D6E63" opacity="0.5"/>
+  </g>
+</svg>
