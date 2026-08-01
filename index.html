@@ -8,7 +8,7 @@
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#E8603C">
+<meta name="theme-color" content="#1F4C72">
 <meta name="color-scheme" content="light">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64" type="image/png">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -36,32 +36,34 @@
    ・影は「段差」（4px 4px 0）。ボタンは押すと影が消えて沈む。
    ・角丸は 20px（パネル・ボタン）／16px（小さい箱）／999px（チップ）。
 
-   このアプリ固有なのは --primary（読書のオレンジ）だけで、
-   --secondary / --accent は Qalc と同じ値を使っている。
+   色みは アプリアイコン（本の ちょきんばこ）に そろえた、
+   ふかい あい色 ＋ きん色の おちついた 組みあわせにしてある。
+   絵文字は つかわず、画面の アイコンは すべて <svg class="ic"> と
+   ページ先頭の スプライト（<symbol id="i-…">）で えがく。
    外部 CSS フレームワークには依存しない（オフラインでも同じ見た目）。
    ============================================================ */
 :root{
   /* ---- 共通デザイントークン（Qalc と同じ変数名・同じ役わり） ---- */
-  --bg:#FFF8F0;
+  --bg:#F3F0E9;          /* アイコンの まわりの 紙いろ */
   --panel:#FFFFFF;
-  --text:#3D2B1F;
-  --primary:#E8603C;     /* このアプリの色（読書のオレンジ） */
-  --secondary:#4ECDC4;   /* Qalc と共通 */
-  --accent:#FFE66D;      /* Qalc と共通 */
+  --text:#14283C;        /* すみ色。文字と すべての輪郭線 */
+  --primary:#1F4C72;     /* このアプリの色（アイコンの ふかい あい） */
+  --secondary:#2E7D8C;   /* きめる・すすむ・もどる（おちついた あおみどり） */
+  --accent:#D9AE58;      /* ごほうび・強調（アイコンの きん） */
 
   /* ---- 上のトークンから作る派生色 ---- */
-  --primary-deep:#B8431F;      /* 小さい文字にのせるときの濃いめ */
-  --primary-tint:#FFF0EA;
-  --secondary-tint:#E7F8F6;
-  --accent-tint:#FFF8DC;
-  --danger:#D7263D;
-  --ok:#3DA35D;
-  --purple:#8E7CC3;
+  --primary-deep:#123A5A;      /* 小さい文字にのせるときの濃いめ */
+  --primary-tint:#EAF0F6;
+  --secondary-tint:#E4F0F2;
+  --accent-tint:#FAF3E3;
+  --danger:#A6414E;
+  --ok:#4A7C59;
+  --purple:#5F5A8A;
 
   --ink:var(--text);
-  --ink-soft:#8A7461;
-  --ink-faint:#B7A493;
-  --line:#E6D6C6;
+  --ink-soft:#5D6E80;
+  --ink-faint:#9AA7B5;
+  --line:#DCE1E8;
   --line-strong:var(--text);
   --surface:var(--panel);
   --brand:var(--primary);
@@ -76,8 +78,8 @@
   --radius:16px;
   --radius-sm:12px;
   --bd:3px;
-  --shadow:4px 4px 0 rgba(61,43,31,.10);
-  --shadow-lg:8px 8px 0 rgba(61,43,31,.18);
+  --shadow:4px 4px 0 rgba(20,40,60,.10);
+  --shadow-lg:8px 8px 0 rgba(20,40,60,.18);
   --shadow-btn:0 4px 0 var(--text);
 
   --header-h:54px;
@@ -92,6 +94,19 @@
 }
 
 *,*::before,*::after{box-sizing:border-box}
+
+/* ---------- アイコン（絵文字は つかわない） ----------
+   ページ先頭の <svg class="icon-sprite"> にある <symbol id="i-…"> を
+   <svg class="ic"><use href="#i-…"></svg> で よび出して えがく。
+   大きさは 親の font-size（1em）、色は currentColor に そろう。 */
+.icon-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{
+  width:1em;height:1em;flex:0 0 auto;
+  display:inline-block;vertical-align:-.14em;
+  fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.ic.solid{fill:currentColor;stroke:none}
 /* hidden 属性を かならず きかせる（.card などの display 指定に まけないように） */
 [hidden]{display:none!important}
 
@@ -139,12 +154,13 @@ ul{padding:0;list-style:none}
 }
 .app-title{
   flex:1;min-width:0;
-  text-align:center;
+  display:flex;align-items:center;justify-content:center;gap:7px;
   font-size:clamp(15px,4.3vw,26px);font-weight:900;
   color:var(--panel);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   letter-spacing:.02em;
 }
+.app-title .t{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-title .ic{font-size:.94em}
 .hdr-slot{flex:0 0 auto;min-width:44px;display:flex;align-items:center}
 .hdr-slot.right{justify-content:flex-end}
 .hdr-btn{
@@ -191,7 +207,8 @@ ul{padding:0;list-style:none}
 .card.soft{background:var(--accent-tint)}
 .card.blue{background:var(--secondary-tint)}
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
-.card-title{font-size:15px;font-weight:900;color:var(--text)}
+.card-title{display:flex;align-items:center;gap:7px;font-size:15px;font-weight:900;color:var(--text);min-width:0}
+.card-title .ic{font-size:1.2em;color:var(--primary)}
 .muted{color:var(--ink-soft);font-size:12px;font-weight:700}
 .tiny{font-size:11.5px;line-height:1.7}
 .center{text-align:center}
@@ -237,6 +254,14 @@ ul{padding:0;list-style:none}
 .chip.gold{background:var(--accent);color:var(--text)}
 .chip.gray{background:var(--panel);color:var(--ink-soft)}
 
+/* さがす らんの 中に おく むしめがね */
+.search-row{position:relative}
+.search-row .search-ic{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  font-size:17px;color:var(--ink-soft);pointer-events:none;z-index:1;
+}
+.input.has-ic{padding-left:38px}
+
 label.field{display:block;margin-bottom:11px}
 label.field > span{display:block;font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:4px}
 .input{
@@ -245,8 +270,8 @@ label.field > span{display:block;font-size:12px;font-weight:900;color:var(--ink-
   font-size:16px;font-weight:900;color:var(--text);outline:none;
 }
 .input::placeholder{color:var(--ink-faint);font-weight:700}
-.input:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(78,205,196,.4)}
-.input.error{border-color:var(--danger);background:#FFF1F3;box-shadow:0 0 0 3px rgba(215,38,61,.22)}
+.input:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(46,125,140,.32)}
+.input.error{border-color:var(--danger);background:#FBF0F1;box-shadow:0 0 0 3px rgba(166,65,78,.22)}
 textarea.input{resize:vertical;min-height:74px;font-weight:700}
 select.input{
   appearance:none;
@@ -279,7 +304,7 @@ select.input{
 .book-item{
   display:flex;align-items:stretch;gap:9px;
   background:var(--panel);border:2px solid var(--text);border-radius:var(--radius);
-  padding:9px 11px;box-shadow:3px 3px 0 rgba(61,43,31,.10);
+  padding:9px 11px;box-shadow:3px 3px 0 rgba(20,40,60,.10);
   text-align:left;width:100%;min-width:0;
   transition:transform .07s ease,box-shadow .07s ease;
 }
@@ -292,10 +317,10 @@ select.input{
 .book-figs{color:var(--primary-deep);font-weight:900;white-space:nowrap}
 .book-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:4px}
 .stars{display:flex;gap:1px;font-size:19px}
-.star{font-size:1em;line-height:1;color:#DACBBD;padding:1px}
-.star.on{color:#F5A623}
+.star{display:inline-flex;font-size:1em;line-height:1;color:#CBD3DB;padding:1px}
+.star.on{color:var(--accent)}
 .empty-state{padding:40px 16px;text-align:center;color:var(--ink-faint);font-weight:900;grid-column:1/-1}
-.empty-state .big{font-size:42px;display:block;margin-bottom:8px}
+.empty-state .big{font-size:42px;display:block;margin:0 auto 8px;color:var(--ink-faint)}
 #recent-list{grid-template-columns:minmax(0,1fr)}
 
 .seg{display:inline-flex;background:var(--panel);border:2px solid var(--text);border-radius:999px;padding:3px;gap:3px}
@@ -308,16 +333,16 @@ select.input{
   background:var(--panel);padding:9px;border-radius:var(--radius);border:var(--bd) solid var(--text);
 }
 .stamp-cell{
-  aspect-ratio:1;border:2px dashed #D9C6B4;border-radius:10px;
+  aspect-ratio:1;border:2px dashed #CFD6DE;border-radius:10px;
   display:flex;align-items:center;justify-content:center;
   font-size:clamp(22px,5vw,32px);line-height:1;background:var(--bg);overflow:hidden;
 }
-.stamp-cell.filled{border:2px solid var(--text);background:var(--accent);animation:pop .3s cubic-bezier(.175,.885,.32,1.275)}
+.stamp-cell.filled{border:2px solid var(--text);background:var(--accent);color:var(--primary-deep);animation:pop .3s cubic-bezier(.175,.885,.32,1.275)}
 @keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
 
 /* ---------- カメラ ---------- */
 .scan-screen{display:flex;flex-direction:column;height:100%;background:var(--text)}
-.scan-stage{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;background:#191008;display:flex;align-items:center;justify-content:center}
+.scan-stage{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;background:#0E1D2B;display:flex;align-items:center;justify-content:center}
 .scan-stage video,.scan-stage canvas.drawingBuffer{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:cover}
 .scan-stage canvas.drawingBuffer{opacity:0}
 .scan-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--accent);text-align:center;padding:20px;z-index:6;font-weight:900}
@@ -331,7 +356,7 @@ select.input{
 @keyframes scan-move{0%{top:12%;opacity:.4}50%{top:50%;opacity:1}100%{top:88%;opacity:.4}}
 .scan-hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:var(--panel);font-size:13px;font-weight:900;z-index:31;padding:0 16px}
 .scan-hint b{color:var(--accent)}
-.scan-ok{position:absolute;inset:0;background:rgba(255,248,240,.95);display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:60}
+.scan-ok{position:absolute;inset:0;background:rgba(243,240,233,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:60}
 .scan-ok.show{display:flex}
 .scan-bar{flex:0 0 auto;display:flex;gap:9px;padding:11px;background:var(--text)}
 .scan-bar .btn{flex:1}
@@ -359,12 +384,19 @@ select.input{
   transition:transform .07s ease,box-shadow .07s ease;
 }
 .menu-item:active{transform:translate(4px,4px);box-shadow:none}
-.menu-emoji{font-size:26px;line-height:1;flex:0 0 auto}
+.menu-emoji{
+  width:42px;height:42px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--text);border-radius:13px;
+  background:var(--primary-tint);color:var(--primary-deep);
+  font-size:21px;line-height:1;
+}
+.menu-item.danger .menu-emoji{background:#F6EAEC;color:var(--danger)}
 .menu-text{flex:1;min-width:0}
 .menu-text b{display:block;font-size:15px;font-weight:900}
 .menu-text span{font-size:11px;color:var(--ink-soft);font-weight:700}
-.menu-arrow{color:var(--primary);font-size:18px;font-weight:900}
-.menu-item.danger{background:var(--primary-tint)}
+.menu-arrow{color:var(--primary);font-size:17px;font-weight:900;flex:0 0 auto}
+.menu-item.danger{background:#FBF2F3;border-color:var(--text)}
 .menu-item.danger .menu-text b{color:var(--danger)}
 .menu-item.danger .menu-arrow{color:var(--danger)}
 
@@ -390,7 +422,7 @@ select.input{
   color:var(--panel);font-size:17px;font-weight:900;
 }
 .nav-back .arrow{font-size:22px}
-.nav-back:active{background:#3FB8B0}
+.nav-back:active{background:#256C79}
 .app-nav[data-mode="back"] .nav-tabs{display:none}
 .app-nav[data-mode="back"] .nav-back{display:flex}
 
@@ -401,7 +433,7 @@ select.input{
   display:flex;align-items:center;justify-content:center;
   background:var(--panel);color:var(--text);
   border:var(--bd) solid var(--text);
-  box-shadow:0 2px 0 rgba(61,43,31,.2);
+  box-shadow:0 2px 0 rgba(20,40,60,.2);
   font-size:26px;font-weight:900;line-height:1;
   z-index:900;pointer-events:none;opacity:0;
   transition:background-color .15s,color .15s;
@@ -427,7 +459,7 @@ select.input{
 
 .dialog-back{
   position:fixed;inset:0;z-index:1000;
-  background:rgba(61,43,31,.62);
+  background:rgba(20,40,60,.62);
   display:flex;align-items:center;justify-content:center;padding:18px;
   padding-bottom:calc(18px + var(--safe-bottom));
 }
@@ -438,7 +470,8 @@ select.input{
 }
 @keyframes dlg-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
 .dialog.danger{border-color:var(--danger)}
-.dialog .dlg-emoji{font-size:44px;display:block;margin-bottom:8px}
+.dialog .dlg-icon{font-size:42px;display:block;margin:0 auto 10px;color:var(--primary)}
+.dialog.danger .dlg-icon{color:var(--danger)}
 .dialog h3{font-size:19px;font-weight:900;margin-bottom:8px;line-height:1.45}
 .dialog p{font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:16px}
 .dialog .dlg-btns{display:flex;gap:10px}
@@ -455,7 +488,7 @@ select.input{
   padding:26px 34px;text-align:center;box-shadow:var(--shadow-lg);
   animation:pop .4s cubic-bezier(.175,.885,.32,1.275);
 }
-.celebrate .box .big{font-size:56px;display:block;margin-bottom:6px}
+.celebrate .box .big{font-size:52px;display:block;margin:0 auto 8px;color:var(--accent)}
 .celebrate .box b{font-size:20px;color:var(--primary)}
 
 /* ---------- 大きい画面（タブレット・PC）---------- */
@@ -492,15 +525,69 @@ select.input{
 </head>
 <body>
 
+<!-- 画面で つかう アイコン。ここに おいた <symbol> を <use> で よび出す -->
+<svg xmlns="http://www.w3.org/2000/svg" class="icon-sprite" aria-hidden="true" focusable="false">
+<symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 18.5 8.5 12 15 5.5"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 5.5 6.5 6.5L9 18.5"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M20 12H4.5"/><path d="M11 19 4 12l7-7"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="m2.8 10.3 9.2-7.6 9.2 7.6"/><path d="M5.4 9.2V20.4h13.2V9.2"/><path d="M9.7 20.4V14h4.6v6.4"/></symbol>
+<symbol id="i-library" viewBox="0 0 24 24"><rect x="3.2" y="5.4" width="3.8" height="15.2" rx="1.1"/><rect x="7.9" y="5.4" width="3.8" height="15.2" rx="1.1"/><path d="m15.5 6 4 1.1-3.5 13-4-1.1z"/></symbol>
+<symbol id="i-stamp" viewBox="0 0 24 24"><circle cx="12" cy="8.6" r="5.8"/><path d="M8.2 13.6 7 21.4l5-2.7 5 2.7-1.2-7.8"/></symbol>
+<symbol id="i-archive" viewBox="0 0 24 24"><rect x="2.8" y="3.6" width="18.4" height="4.6" rx="1.6"/><path d="M4.8 8.2v10.9a1.7 1.7 0 0 0 1.7 1.7h11a1.7 1.7 0 0 0 1.7-1.7V8.2"/><path d="M10 12.2h4"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6.9C10.9 5.2 8.9 4.2 6.6 4.2H2.8v12.9h3.8c2.3 0 4.3 1 5.4 2.7z"/><path d="M12 6.9c1.1-1.7 3.1-2.7 5.4-2.7h3.8v12.9h-3.8c-2.3 0-4.3 1-5.4 2.7z"/></symbol>
+<symbol id="i-book-plus" viewBox="0 0 24 24"><path d="M4.8 4.2A2 2 0 0 1 6.8 2.2h12.4v15.6H6.8a2 2 0 0 0-2 2z"/><path d="M4.8 19.8a2 2 0 0 0 2 2h12.4v-4"/><path d="M12 6.4v5.6"/><path d="M9.2 9.2h5.6"/></symbol>
+<symbol id="i-book-check" viewBox="0 0 24 24"><path d="M4.8 4.2A2 2 0 0 1 6.8 2.2h12.4v15.6H6.8a2 2 0 0 0-2 2z"/><path d="M4.8 19.8a2 2 0 0 0 2 2h12.4v-4"/><path d="m9 9.4 2.2 2.2 4-4"/></symbol>
+<symbol id="i-guide" viewBox="0 0 24 24"><path d="M4.8 4.2A2 2 0 0 1 6.8 2.2h12.4v15.6H6.8a2 2 0 0 0-2 2z"/><path d="M4.8 19.8a2 2 0 0 0 2 2h12.4v-4"/><path d="M10.2 7.4a1.9 1.9 0 0 1 3.6.7c0 1.3-1.8 1.6-1.8 2.7"/><path d="M12 13.7h.01"/></symbol>
+<symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.1"/><path d="m8.7 7.4 3.3 3.9 3.3-3.9"/><path d="M12 11.3V17"/><path d="M9 12.7h6"/><path d="M9 15h6"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M3.7 8.4h3.1l1.6-2.5h7.2l1.6 2.5h3.1a1.6 1.6 0 0 1 1.6 1.6v8.2a1.6 1.6 0 0 1-1.6 1.6H3.7a1.6 1.6 0 0 1-1.6-1.6V10a1.6 1.6 0 0 1 1.6-1.6Z"/><circle cx="12" cy="13.6" r="3.5"/></symbol>
+<symbol id="i-barcode" viewBox="0 0 24 24"><path d="M2.8 8V5.6a2 2 0 0 1 2-2h2.4"/><path d="M16.8 3.6h2.4a2 2 0 0 1 2 2V8"/><path d="M21.2 16v2.4a2 2 0 0 1-2 2h-2.4"/><path d="M7.2 20.4H4.8a2 2 0 0 1-2-2V16"/><path d="M7.4 8v8"/><path d="M12 8v8"/><path d="M16.6 8v8"/></symbol>
+<symbol id="i-keypad" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3.2"/><path d="M8 8h.01M12 8h.01M16 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24"><path d="M15.4 4.7 19.3 8.6"/><path d="M17.1 3a2.2 2.2 0 0 1 3.1 3.1L8.3 18 3.4 20.6l2.6-4.9z"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.9"/><path d="m20.2 20.2-4.5-4.5"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.1"/><path d="M12 6.9v5.4l3.5 2"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M3.4 3v17.6h17.2"/><path d="m6.9 15.4 3.9-4.5 3.2 3 4.8-6.1"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.4"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5"/></symbol>
+<symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.4"/><path d="M3 9.4h18"/><path d="M3 14.8h18"/><path d="M9.4 9.4V20"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M2.8 7.4a1.7 1.7 0 0 1 1.7-1.7h4.1l2.1 2.6h8.6a1.7 1.7 0 0 1 1.7 1.7v8.6a1.7 1.7 0 0 1-1.7 1.7H4.5a1.7 1.7 0 0 1-1.7-1.7z"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M12 3.2v11.2"/><path d="m7.5 10.2 4.5 4.5 4.5-4.5"/><path d="M4 16.8v2.6a1.6 1.6 0 0 0 1.6 1.6h12.8a1.6 1.6 0 0 0 1.6-1.6v-2.6"/></symbol>
+<symbol id="i-install" viewBox="0 0 24 24"><rect x="6" y="2.4" width="12" height="19.2" rx="2.6"/><path d="M12 6.6v6.6"/><path d="m9.4 10.9 2.6 2.6 2.6-2.6"/><path d="M10.4 18.6h3.2"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15.2V2.8"/><path d="m8.2 6.6 3.8-3.8 3.8 3.8"/><path d="M6.6 10.8H5a2 2 0 0 0-2 2v6.4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6.4a2 2 0 0 0-2-2h-1.6"/></symbol>
+<symbol id="i-flash" viewBox="0 0 24 24"><path d="M13.2 2.4 4.4 13.5h6.7L10.8 21.6l8.8-11.1h-6.7z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.4h16"/><path d="M9.4 6.4V4.2A1.3 1.3 0 0 1 10.7 3h2.6a1.3 1.3 0 0 1 1.3 1.2v2.2"/><path d="m6.5 6.4.9 13.5a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-13.5"/><path d="M10.2 10.4v6.7"/><path d="M13.8 10.4v6.7"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.1"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.1"/><path d="m7.9 12.2 2.8 2.8 5.4-5.4"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.1"/><path d="M9.3 9.5a2.7 2.7 0 0 1 5.3.7c0 1.8-2.6 2.2-2.6 3.8"/><path d="M12 17.4h.01"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.1"/><path d="M12 11v5.6"/><path d="M12 7.6h.01"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 2.7 17.2a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9.2v4.3"/><path d="M12 17.1h.01"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2.6 7.6 3v6.1c0 4.6-3.2 8-7.6 9.7-4.4-1.7-7.6-5.1-7.6-9.7V5.6z"/><rect x="9.4" y="11.6" width="5.2" height="4.2" rx="1"/><path d="M10.6 11.6v-1.4a1.4 1.4 0 0 1 2.8 0v1.4"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8.8a6 6 0 1 0-12 0c0 6-2.2 7.4-2.2 7.4h16.4S18 14.8 18 8.8"/><path d="M13.7 19.6a2 2 0 0 1-3.4 0"/></symbol>
+<symbol id="i-bell-off" viewBox="0 0 24 24"><path d="M17.9 9.2a6 6 0 0 0-9-5.4"/><path d="M6.1 6.4A6 6 0 0 0 6 8.8c0 6-2.2 7.4-2.2 7.4h12.6"/><path d="M13.7 19.6a2 2 0 0 1-3.4 0"/><path d="m3 3 18 18"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6.4 4.4H4.2a2.4 2.4 0 0 0 2.2 4.8"/><path d="M17.6 4.4h2.2a2.4 2.4 0 0 1-2.2 4.8"/><path d="M6.4 2.6h11.2v6.2a5.6 5.6 0 1 1-11.2 0z"/><path d="M12 14.4v3.2"/><path d="M8.2 21.4h7.6"/><path d="M9.6 17.6h4.8l1.4 3.8H8.2z"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.1 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/></symbol>
+<symbol id="i-m1" viewBox="0 0 24 24"><path d="M12 3.4v2.4"/><path d="m5.4 7.4 1.7 1.7"/><path d="m18.6 7.4-1.7 1.7"/><path d="M7.6 16.2a4.4 4.4 0 0 1 8.8 0"/><path d="M2.8 16.2h18.4"/><path d="M5.4 19.8h13.2"/></symbol>
+<symbol id="i-m2" viewBox="0 0 24 24"><path d="M12 2.8v18.4"/><path d="m4 7.4 16 9.2"/><path d="m4 16.6 16-9.2"/><path d="m9.2 5.2 2.8 2.8 2.8-2.8"/><path d="m9.2 18.8 2.8-2.8 2.8 2.8"/></symbol>
+<symbol id="i-m3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.1"/><ellipse cx="12" cy="6.7" rx="2.6" ry="3.5"/><ellipse cx="12" cy="17.3" rx="2.6" ry="3.5"/><ellipse cx="6.7" cy="12" rx="3.5" ry="2.6"/><ellipse cx="17.3" cy="12" rx="3.5" ry="2.6"/></symbol>
+<symbol id="i-m4" viewBox="0 0 24 24"><path d="M7 20.6h10"/><path d="M12 20.6V9.2"/><path d="M12 9.2C12 5.8 9.2 3 5.8 3c0 3.4 2.8 6.2 6.2 6.2"/><path d="M12 11.4c0-2.9 2.3-5.2 5.2-5.2 0 2.9-2.3 5.2-5.2 5.2"/></symbol>
+<symbol id="i-m5" viewBox="0 0 24 24"><path d="M16.4 12c0 3-3.3 5.6-7 5.6-1.5 0-2.9-.4-4.1-1.1.6-1.4.9-2.9.9-4.5s-.3-3.1-.9-4.5c1.2-.7 2.6-1.1 4.1-1.1 3.7 0 7 2.6 7 5.6"/><path d="M16.4 12 21 8.1v7.8z"/><path d="M12.4 10.2h.01"/></symbol>
+<symbol id="i-m6" viewBox="0 0 24 24"><path d="M12 12v7.4a2.1 2.1 0 0 0 4.2 0"/><path d="M2.8 12a9.2 9.2 0 0 1 18.4 0z"/></symbol>
+<symbol id="i-m7" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.3"/><path d="M12 2.4v2.3"/><path d="M12 19.3v2.3"/><path d="m4.8 4.8 1.7 1.7"/><path d="m17.5 17.5 1.7 1.7"/><path d="M2.4 12h2.3"/><path d="M19.3 12h2.3"/><path d="m4.8 19.2 1.7-1.7"/><path d="m17.5 6.5 1.7-1.7"/></symbol>
+<symbol id="i-m8" viewBox="0 0 24 24"><path d="M2.6 8.2c1.9-2 3.8-2 5.7 0s3.8 2 5.7 0 3.8-2 5.7 0"/><path d="M2.6 13.2c1.9-2 3.8-2 5.7 0s3.8 2 5.7 0 3.8-2 5.7 0"/><path d="M2.6 18.2c1.9-2 3.8-2 5.7 0s3.8 2 5.7 0 3.8-2 5.7 0"/></symbol>
+<symbol id="i-m9" viewBox="0 0 24 24"><path d="M20.2 14.6A8.6 8.6 0 0 1 9.4 3.8 8.6 8.6 0 1 0 20.2 14.6"/></symbol>
+<symbol id="i-m10" viewBox="0 0 24 24"><path d="M5.2 20.8V10.4a6.8 6.8 0 0 1 13.6 0v10.4l-2.3-1.8-2.2 1.8-2.3-1.8-2.3 1.8-2.2-1.8z"/><path d="M9.6 10.2h.01"/><path d="M14.4 10.2h.01"/></symbol>
+<symbol id="i-m11" viewBox="0 0 24 24"><path d="M11 20.4A7 7 0 0 1 9.8 6.5C15.5 5.4 17 4.9 19 2.4c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10"/><path d="M2.6 21.4c0-3 1.9-5.4 5.1-6 2.4-.5 4.9-2 5.9-3"/></symbol>
+<symbol id="i-m12" viewBox="0 0 24 24"><path d="m12 2.6 4.4 6.6H7.6z"/><path d="m12 7.8 5.8 7.8H6.2z"/><path d="M12 15.6v5.8"/><path d="M8.9 21.4h6.2"/></symbol>
+</svg>
+
 <div class="app" id="app">
 
   <header class="app-header">
     <div class="hdr-slot">
-      <button class="hdr-btn" id="hdr-back" hidden aria-label="まえのがめんに もどる">◀ もどる</button>
+      <button class="hdr-btn" id="hdr-back" hidden aria-label="まえのがめんに もどる"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-left"></use></svg>もどる</button>
     </div>
-    <h1 class="app-title" id="app-title">📖 どくしょ ちょきんばこ</h1>
+    <h1 class="app-title" id="app-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"></use></svg><span class="t">どくしょ ちょきんばこ</span></h1>
     <div class="hdr-slot right">
-      <button class="hdr-btn" id="hdr-help" data-act="go" data-screen="help" aria-label="つかいかた">❓</button>
+      <button class="hdr-btn" id="hdr-help" data-act="go" data-screen="help" aria-label="つかいかた"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-help"></use></svg></button>
     </div>
   </header>
 
@@ -514,7 +601,7 @@ select.input{
 
             <section class="card soft">
               <div class="card-head">
-                <h2 class="card-title">🪙 いままでに よんだ本の ちょきん</h2>
+                <h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-coin"></use></svg>いままでに よんだ本の ちょきん</h2>
               </div>
               <div class="bank-grid">
                 <div class="bank-box">
@@ -545,23 +632,23 @@ select.input{
 
           <div class="stack">
             <section class="card blue">
-              <div class="card-head"><h2 class="card-title">📚 本を きろくする</h2></div>
+              <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book-plus"></use></svg>本を きろくする</h2></div>
               <div class="stack">
                 <button class="btn btn-blue btn-xl block" data-act="go" data-screen="scan">
-                  <span class="btn-icon">📷</span> カメラで バーコードを よむ
+                  <svg class="ic btn-icon" aria-hidden="true" focusable="false"><use href="#i-camera"></use></svg>カメラで バーコードを よむ
                 </button>
                 <button class="btn btn-ghost block" data-act="entry" data-mode="isbn">
-                  <span class="btn-icon">🔢</span> 本のばんごう(ISBN)で さがす
+                  <svg class="ic btn-icon" aria-hidden="true" focusable="false"><use href="#i-keypad"></use></svg>本のばんごう(ISBN)で さがす
                 </button>
                 <button class="btn btn-ghost block" data-act="entry" data-mode="manual">
-                  <span class="btn-icon">✍️</span> じぶんで かいて きろくする
+                  <svg class="ic btn-icon" aria-hidden="true" focusable="false"><use href="#i-pen"></use></svg>じぶんで かいて きろくする
                 </button>
               </div>
             </section>
 
             <section class="card">
               <div class="card-head">
-                <h2 class="card-title">🕒 さいきん きろくした本</h2>
+                <h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-clock"></use></svg>さいきん きろくした本</h2>
                 <button class="btn btn-sm btn-ghost" data-act="tab" data-tab="list">ぜんぶ みる</button>
               </div>
               <div class="book-list" id="recent-list"></div>
@@ -588,8 +675,9 @@ select.input{
               <button data-act="range" data-range="all">ぜんぶ</button>
             </div>
           </div>
-          <div class="row" style="margin-top:9px">
-            <input class="input" id="list-search" type="search" placeholder="🔎 本の なまえで さがす" autocomplete="off">
+          <div class="row search-row" style="margin-top:9px">
+            <svg class="ic search-ic" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+            <input class="input has-ic" id="list-search" type="search" placeholder="本の なまえで さがす" autocomplete="off">
           </div>
           <div class="row" style="margin-top:9px;justify-content:space-between">
             <span class="chip" id="list-count">0 さつ</span>
@@ -639,39 +727,39 @@ select.input{
       <div class="wrap">
         <div class="menu">
           <button class="menu-item" data-act="go" data-screen="stats">
-            <span class="menu-emoji">📈</span>
+            <span class="menu-emoji"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chart"></use></svg></span>
             <span class="menu-text"><b>どくしょの ふりかえり</b><span>つづけてきた ようすを グラフで みる</span></span>
-            <span class="menu-arrow">›</span>
+            <span class="menu-arrow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-right"></use></svg></span>
           </button>
           <button class="menu-item" data-act="go" data-screen="backup">
-            <span class="menu-emoji">💾</span>
+            <span class="menu-emoji"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg></span>
             <span class="menu-text"><b>データを のこす・よみこむ</b><span>べつの きかいへ もっていく</span></span>
-            <span class="menu-arrow">›</span>
+            <span class="menu-arrow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-right"></use></svg></span>
           </button>
           <button class="menu-item" data-act="go" data-screen="help">
-            <span class="menu-emoji">📕</span>
+            <span class="menu-emoji"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-guide"></use></svg></span>
             <span class="menu-text"><b>つかいかた</b><span>こまったときは ここを みてね</span></span>
-            <span class="menu-arrow">›</span>
+            <span class="menu-arrow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-right"></use></svg></span>
           </button>
           <button class="menu-item install-only" id="install-row" data-act="install" hidden>
-            <span class="menu-emoji">📲</span>
+            <span class="menu-emoji"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-install"></use></svg></span>
             <span class="menu-text"><b>アプリとして インストール</b><span>ホームがめんに おいて つかえます</span></span>
-            <span class="menu-arrow">›</span>
+            <span class="menu-arrow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-right"></use></svg></span>
           </button>
           <button class="menu-item" data-act="toggle-sound">
-            <span class="menu-emoji" id="sound-emoji">🔔</span>
+            <span class="menu-emoji" id="sound-emoji"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-bell"></use></svg></span>
             <span class="menu-text"><b>おとを ならす</b><span id="sound-state">ならす</span></span>
             <span class="menu-arrow" id="sound-mark">オン</span>
           </button>
           <button class="menu-item danger" data-act="go" data-screen="reset">
-            <span class="menu-emoji">♻️</span>
+            <span class="menu-emoji"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash"></use></svg></span>
             <span class="menu-text"><b>きろくを ぜんぶ けす</b><span>もとには もどせません</span></span>
-            <span class="menu-arrow">›</span>
+            <span class="menu-arrow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-right"></use></svg></span>
           </button>
         </div>
 
         <section class="card">
-          <div class="card-head"><h2 class="card-title">ℹ️ このアプリについて</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-info"></use></svg>このアプリについて</h2></div>
           <p class="muted tiny" id="about-text"></p>
         </section>
       </div>
@@ -682,7 +770,7 @@ select.input{
       <div class="scan-screen">
         <div class="scan-stage" id="scan-stage">
           <div class="scan-idle" id="scan-idle">
-            <span style="font-size:44px">📷</span>
+            <svg class="ic" aria-hidden="true" focusable="false" style="font-size:46px"><use href="#i-camera"></use></svg>
             <p id="scan-idle-msg">カメラの じゅんびを しています…</p>
           </div>
           <div class="scan-frame" id="scan-frame" hidden>
@@ -691,11 +779,11 @@ select.input{
             <span class="scan-line"></span>
           </div>
           <p class="scan-hint" id="scan-hint" hidden>本の うらの <b>978</b> ではじまる バーコードに あわせてね</p>
-          <div class="scan-ok" id="scan-ok"><span style="font-size:46px">✅</span><b style="color:var(--primary)">よめました！</b></div>
+          <div class="scan-ok" id="scan-ok"><svg class="ic" aria-hidden="true" focusable="false" style="font-size:48px;color:var(--ok)"><use href="#i-check"></use></svg><b style="color:var(--primary)">よめました！</b></div>
         </div>
         <div class="scan-bar">
-          <button class="btn btn-ghost" data-act="torch" id="torch-btn" hidden>💡 ライト</button>
-          <button class="btn btn-blue" data-act="entry" data-mode="isbn">🔢 ばんごうで いれる</button>
+          <button class="btn btn-ghost" data-act="torch" id="torch-btn" hidden><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-flash"></use></svg>ライト</button>
+          <button class="btn btn-blue" data-act="entry" data-mode="isbn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-keypad"></use></svg>ばんごうで いれる</button>
           <button class="btn btn-ghost" data-act="back">やめる</button>
         </div>
       </div>
@@ -705,7 +793,7 @@ select.input{
     <section class="screen" data-screen="entry" aria-label="本をきろくする">
       <div class="wrap">
         <section class="card blue" id="isbn-card">
-          <div class="card-head"><h2 class="card-title">🔎 本のばんごう(ISBN)で さがす</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>本のばんごう(ISBN)で さがす</h2></div>
           <div class="row">
             <input class="input" id="entry-isbn" type="text" inputmode="numeric" autocomplete="off"
                    placeholder="978…" aria-label="ISBN">
@@ -715,7 +803,7 @@ select.input{
         </section>
 
         <section class="card">
-          <div class="card-head"><h2 class="card-title">✍️ 本の じょうほう</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-pen"></use></svg>本の じょうほう</h2></div>
           <label class="field"><span>本の なまえ ＊</span>
             <input class="input" id="entry-title" type="text" autocomplete="off" maxlength="120"></label>
           <label class="field"><span>かいた ひと</span>
@@ -735,7 +823,7 @@ select.input{
         </section>
 
         <p class="center" id="entry-month-note" hidden></p>
-        <button class="btn btn-primary btn-xl block" data-act="save">📗 この本を きろくする！</button>
+        <button class="btn btn-primary btn-xl block" data-act="save"><svg class="ic btn-icon" aria-hidden="true" focusable="false"><use href="#i-book-check"></use></svg>この本を きろくする！</button>
         <p class="muted tiny center">＊の ところは かならず かいてね</p>
       </div>
     </section>
@@ -754,23 +842,23 @@ select.input{
     <section class="screen" data-screen="backup" aria-label="データをのこす">
       <div class="wrap">
         <section class="card">
-          <div class="card-head"><h2 class="card-title">💾 データを のこす</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>データを のこす</h2></div>
           <p class="muted tiny" style="margin-bottom:10px">きかいを かえるときや、まんいちに そなえて ファイルに のこせます。</p>
           <div class="stack">
-            <button class="btn btn-blue block" data-act="export">💾 ファイルに ほぞんする</button>
-            <button class="btn btn-green block" data-act="copy">📊 ひょう(スプレッドシート)に コピー</button>
+            <button class="btn btn-blue block" data-act="export"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>ファイルに ほぞんする</button>
+            <button class="btn btn-green block" data-act="copy"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-table"></use></svg>ひょう(スプレッドシート)に コピー</button>
           </div>
         </section>
 
         <section class="card">
-          <div class="card-head"><h2 class="card-title">📖 のこした データを よむ</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"></use></svg>のこした データを よむ</h2></div>
           <p class="muted tiny" style="margin-bottom:10px">ほぞんした ファイル(.json)を えらんでください。<br>いまの きろくに <b>くわえる</b>か、<b>ぜんぶ いれかえる</b>か えらべます。</p>
-          <button class="btn btn-purple block" data-act="import">📂 ファイルを えらぶ</button>
+          <button class="btn btn-purple block" data-act="import"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"></use></svg>ファイルを えらぶ</button>
           <input type="file" id="import-file" accept=".json,application/json" hidden>
         </section>
 
         <section class="card">
-          <div class="card-head"><h2 class="card-title">🔐 データの ばしょ</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-shield"></use></svg>データの ばしょ</h2></div>
           <p class="muted tiny">きろくは この きかいの なかだけに ほぞんされます。<br>インターネットへ おくることは ありません。</p>
         </section>
       </div>
@@ -780,24 +868,24 @@ select.input{
     <section class="screen" data-screen="help" aria-label="つかいかた">
       <div class="wrap">
         <section class="card blue">
-          <div class="card-head"><h2 class="card-title">📸 バーコードを よむ</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-barcode"></use></svg>バーコードを よむ</h2></div>
           <p class="tiny">本の うらに ある <b>978</b> で はじまる バーコードに、あかい線を あわせてね。<br>
           すぐ下に ある <b>192</b> で はじまる バーコードは ねだんの バーコードなので つかいません。</p>
         </section>
         <section class="card">
-          <div class="card-head"><h2 class="card-title">🔢 ばんごうを いれる</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-keypad"></use></svg>ばんごうを いれる</h2></div>
           <p class="tiny">カメラが つかえないときは、バーコードの下の <b>978…</b> の すうじを じぶんで いれて さがせます。</p>
         </section>
         <section class="card">
-          <div class="card-head"><h2 class="card-title">◀ まえの がめんに もどる</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-left"></use></svg>まえの がめんに もどる</h2></div>
           <p class="tiny">がめんの 下の <b>「もどる」</b>を おすか、がめんの <b>左右の はし</b>から まんなかへ <b>スーッと ゆびを うごかす</b>と もどれます。</p>
         </section>
         <section class="card">
-          <div class="card-head"><h2 class="card-title">⭐ ほしを つける</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic solid" aria-hidden="true" focusable="false"><use href="#i-star"></use></svg>ほしを つける</h2></div>
           <p class="tiny">リストで 本を えらぶと、おもしろさの ほしや かんそうを かけます。まちがえた きろみは そこで けせます。</p>
         </section>
         <section class="card">
-          <div class="card-head"><h2 class="card-title">💾 データを のこす</h2></div>
+          <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>データを のこす</h2></div>
           <p class="tiny">「きろく」の がめんから ファイルに ほぞんできます。ほぞんして おけば、きかいを かえても つづきから できます。</p>
         </section>
       </div>
@@ -806,15 +894,15 @@ select.input{
     <!-- ========== ぜんぶけす（かいそう1） ========== -->
     <section class="screen" data-screen="reset" aria-label="きろくをぜんぶけす">
       <div class="wrap">
-        <section class="card" style="border-color:#FFCDD2">
-          <div class="card-head"><h2 class="card-title" style="color:var(--danger)">⚠️ きろくを ぜんぶ けす</h2></div>
+        <section class="card" style="border-color:#E7C6CA">
+          <div class="card-head"><h2 class="card-title" style="color:var(--danger)"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-alert"></use></svg>きろくを ぜんぶ けす</h2></div>
           <p class="tiny" style="margin-bottom:12px">
             よんだ本の きろく・もくひょう・スタンプが <b>ぜんぶ きえます</b>。<br>
             もとには もどせません。けす まえに 「データを のこす」で ほぞんして おくと あんしんです。
           </p>
           <div class="stack">
-            <button class="btn btn-blue block" data-act="export">💾 さきに ほぞんする</button>
-            <button class="btn btn-danger block" data-act="reset">♻️ ほんとうに ぜんぶ けす</button>
+            <button class="btn btn-blue block" data-act="export"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>さきに ほぞんする</button>
+            <button class="btn btn-danger block" data-act="reset"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-trash"></use></svg>ほんとうに ぜんぶ けす</button>
             <button class="btn block" data-act="back">やめる</button>
           </div>
         </section>
@@ -825,17 +913,17 @@ select.input{
 
   <nav class="app-nav" id="app-nav" data-mode="tabs">
     <div class="nav-tabs">
-      <button class="nav-tab" data-act="tab" data-tab="home"><span class="ico">🏠</span><span class="lbl">ホーム</span></button>
-      <button class="nav-tab" data-act="tab" data-tab="list"><span class="ico">📚</span><span class="lbl">リスト</span></button>
-      <button class="nav-tab" data-act="tab" data-tab="stamp"><span class="ico">💮</span><span class="lbl">スタンプ</span></button>
-      <button class="nav-tab" data-act="tab" data-tab="data"><span class="ico">🗂️</span><span class="lbl">きろく</span></button>
+      <button class="nav-tab" data-act="tab" data-tab="home"><svg class="ic ico" aria-hidden="true" focusable="false"><use href="#i-home"></use></svg><span class="lbl">ホーム</span></button>
+      <button class="nav-tab" data-act="tab" data-tab="list"><svg class="ic ico" aria-hidden="true" focusable="false"><use href="#i-library"></use></svg><span class="lbl">リスト</span></button>
+      <button class="nav-tab" data-act="tab" data-tab="stamp"><svg class="ic ico" aria-hidden="true" focusable="false"><use href="#i-stamp"></use></svg><span class="lbl">スタンプ</span></button>
+      <button class="nav-tab" data-act="tab" data-tab="data"><svg class="ic ico" aria-hidden="true" focusable="false"><use href="#i-archive"></use></svg><span class="lbl">きろく</span></button>
     </div>
-    <button class="nav-back" data-act="back"><span class="arrow">◀</span> <span id="nav-back-label">まえの がめんに もどる</span></button>
+    <button class="nav-back" data-act="back"><svg class="ic arrow" aria-hidden="true" focusable="false"><use href="#i-chevron-left"></use></svg><span id="nav-back-label">まえの がめんに もどる</span></button>
   </nav>
 </div>
 
-<div class="edge-hint left" id="edge-left"><span class="ico">↩</span></div>
-<div class="edge-hint right" id="edge-right"><span class="ico">↩</span></div>
+<div class="edge-hint left" id="edge-left"><svg class="ic ico" aria-hidden="true" focusable="false"><use href="#i-arrow-left"></use></svg></div>
+<div class="edge-hint right" id="edge-right"><svg class="ic ico" aria-hidden="true" focusable="false"><use href="#i-arrow-left"></use></svg></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="dialog-root"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -850,7 +938,7 @@ select.input{
    0. 定数
    ============================================================ */
 var APP_ID      = 'reading-books';   // 学習ログの appId（仕様書 §3.1）
-var APP_VERSION = '2.2.0';
+var APP_VERSION = '2.3.0';
 
 /* このアプリ専用の保存キー。
    `study.records.v1`（共通の学習ログ）は【ここに含めない】。
@@ -861,7 +949,17 @@ var KEYS = {
   meta:  'reading_record_main_v1_meta'
 };
 
-var MONTH_STAMPS = { 1:'🎍',2:'❄️',3:'🌸',4:'🎒',5:'🎏',6:'💠',7:'🍉',8:'🌻',9:'🎑',10:'🎃',11:'🍁',12:'🎄' };
+/* 月ごとの スタンプの えがら（ページ先頭の <symbol id="i-m…"> を さす） */
+var MONTH_STAMPS = {
+  1:'i-m1',  2:'i-m2',  3:'i-m3',  4:'i-m4',  5:'i-m5',  6:'i-m6',
+  7:'i-m7',  8:'i-m8',  9:'i-m9', 10:'i-m10',11:'i-m11',12:'i-m12'
+};
+
+/** アイコン1個ぶんの HTML。name は ページ先頭の <symbol> の id */
+function ic(name, cls) {
+  return '<svg class="' + (cls || 'ic') + '" aria-hidden="true" focusable="false">' +
+         '<use href="#' + name + '"></use></svg>';
+}
 
 var $  = function (sel, root) { return (root || document).querySelector(sel); };
 var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
@@ -1039,7 +1137,8 @@ function confetti() {
   var W = cv.width = Math.floor(innerWidth * dpr);
   var H = cv.height = Math.floor(innerHeight * dpr);
   cv.style.display = 'block';
-  var colors = ['#FFD700', '#FFA500', '#FF4500', '#FF7043', '#4FC3F7', '#66BB6A', '#FFFFFF'];
+  // アイコンと おなじ 色みの 紙ふぶき（きん・あい・あおみどり・みどり）
+  var colors = ['#D9AE58', '#E9C36C', '#1F4C72', '#2E7D8C', '#4A7C59', '#F3F0E9', '#FFFFFF'];
   var parts = [], i;
   for (i = 0; i < 130; i++) {
     parts.push({
@@ -1071,10 +1170,10 @@ function confetti() {
   requestAnimationFrame(frame);
 }
 
-function celebrate(emoji, text, sub) {
+function celebrate(icon, text, sub) {
   var el = document.createElement('div');
   el.className = 'celebrate';
-  el.innerHTML = '<div class="box"><span class="big">' + esc(emoji) + '</span><b>' + esc(text) + '</b>' +
+  el.innerHTML = '<div class="box">' + ic(icon, 'ic big') + '<b>' + esc(text) + '</b>' +
     (sub ? '<p class="muted tiny" style="margin-top:6px">' + esc(sub) + '</p>' : '') + '</div>';
   document.body.appendChild(el);
   setTimeout(function () { el.remove(); }, 2400);
@@ -1090,7 +1189,7 @@ function closeDialog(value) {
   root.innerHTML = '';
   if (dialogResolve) { var r = dialogResolve; dialogResolve = null; r(value); }
 }
-/** opts: {emoji,title,body,buttons:[{label,value,cls}]} → Promise<value> */
+/** opts: {icon,title,body,buttons:[{label,value,cls}]} → Promise<value> */
 function showDialog(opts) {
   closeDialog(null);
   return new Promise(function (resolve) {
@@ -1102,7 +1201,7 @@ function showDialog(opts) {
     root.innerHTML =
       '<div class="dialog-back" data-dlg-back="1">' +
         '<div class="dialog' + (opts.danger ? ' danger' : '') + '" role="dialog" aria-modal="true">' +
-          (opts.emoji ? '<span class="dlg-emoji">' + esc(opts.emoji) + '</span>' : '') +
+          (opts.icon ? ic(opts.icon, 'ic dlg-icon') : '') +
           '<h3>' + esc(opts.title || '') + '</h3>' +
           (opts.body ? '<p>' + String(opts.body) + '</p>' : '') +
           '<div class="dlg-btns">' + btns + '</div>' +
@@ -1119,7 +1218,7 @@ function showDialog(opts) {
 }
 function confirmDialog(title, body, okLabel, danger) {
   return showDialog({
-    emoji: danger ? '⚠️' : '❓',
+    icon: danger ? 'i-alert' : 'i-help',
     title: title, body: body, danger: !!danger,
     buttons: [
       { label: 'やめる', value: false, cls: '' },
@@ -1281,18 +1380,18 @@ function loadStudyRecords(appId) {
    ============================================================ */
 var TABS = ['home', 'list', 'stamp', 'data'];
 var SCREENS = {
-  'tab-home':  { tab: 'home',  title: '📖 どくしょ ちょきんばこ', render: renderHome },
-  'tab-list':  { tab: 'list',  title: '📚 よんだ本の リスト',     render: renderList },
-  'tab-stamp': { tab: 'stamp', title: '💮 スタンプちょう',        render: renderStamp },
-  'tab-data':  { tab: 'data',  title: '🗂️ きろく と せってい',    render: renderData },
-  'scan':      { tab: 'home',  title: '📷 カメラで よみとる', back: 'ホームに もどる',
+  'tab-home':  { tab: 'home',  icon: 'i-book',       title: 'どくしょ ちょきんばこ', render: renderHome },
+  'tab-list':  { tab: 'list',  icon: 'i-library',    title: 'よんだ本の リスト',     render: renderList },
+  'tab-stamp': { tab: 'stamp', icon: 'i-stamp',      title: 'スタンプちょう',        render: renderStamp },
+  'tab-data':  { tab: 'data',  icon: 'i-archive',    title: 'きろく と せってい',    render: renderData },
+  'scan':      { tab: 'home',  icon: 'i-camera',     title: 'カメラで よみとる', back: 'ホームに もどる',
                  render: onScanShow, hide: onScanHide },
-  'entry':     { tab: 'home',  title: '📗 本を きろくする',   back: 'もどる', render: renderEntry, hide: onEntryHide },
-  'detail':    { tab: 'list',  title: '🔎 本の くわしく',     back: 'リストに もどる', render: renderDetail },
-  'stats':     { tab: 'data',  title: '📈 どくしょの ふりかえり', back: 'もどる', render: renderStats },
-  'backup':    { tab: 'data',  title: '💾 データを のこす',   back: 'もどる', render: function () {} },
-  'help':      { tab: 'data',  title: '📕 つかいかた',        back: 'もどる', render: function () {} },
-  'reset':     { tab: 'data',  title: '♻️ ぜんぶ けす',       back: 'もどる', render: function () {} }
+  'entry':     { tab: 'home',  icon: 'i-book-check', title: '本を きろくする',   back: 'もどる', render: renderEntry, hide: onEntryHide },
+  'detail':    { tab: 'list',  icon: 'i-search',     title: '本の くわしく',     back: 'リストに もどる', render: renderDetail },
+  'stats':     { tab: 'data',  icon: 'i-chart',      title: 'どくしょの ふりかえり', back: 'もどる', render: renderStats },
+  'backup':    { tab: 'data',  icon: 'i-save',       title: 'データを のこす',   back: 'もどる', render: function () {} },
+  'help':      { tab: 'data',  icon: 'i-guide',      title: 'つかいかた',        back: 'もどる', render: function () {} },
+  'reset':     { tab: 'data',  icon: 'i-trash',      title: 'ぜんぶ けす',       back: 'もどる', render: function () {} }
 };
 
 var navStack = [{ tab: 'home' }];
@@ -1401,7 +1500,7 @@ function paint(direction) {
   el.scrollTop = (direction === 'back' && scrollMemo[key]) ? scrollMemo[key] : 0;
 
   // ヘッダー・下のナビ
-  $('#app-title').textContent = def.title;
+  $('#app-title').innerHTML = ic(def.icon || 'i-book') + '<span class="t">' + esc(def.title) + '</span>';
   var isRoot = !entry.screen;
   var back = $('#hdr-back');
   back.hidden = isRoot && navIndex === 0;
@@ -1507,7 +1606,7 @@ function starsHTML(rating, id, size) {
   var out = '<div class="stars"' + (size ? ' style="font-size:' + size + '"' : '') + '>';
   for (var i = 1; i <= 5; i++) {
     out += '<button class="star' + (i <= rating ? ' on' : '') + '" data-act="rate" data-id="' + esc(id) +
-           '" data-star="' + i + '" aria-label="ほし' + i + '">★</button>';
+           '" data-star="' + i + '" aria-label="ほし' + i + '">' + ic('i-star', 'ic solid') + '</button>';
   }
   return out + '</div>';
 }
@@ -1527,17 +1626,17 @@ function bookItemHTML(b) {
     '</span>' +
     '<span class="book-side">' +
       '<span class="stars" aria-hidden="true">' +
-        '★★★★★'.split('').map(function (s, i) {
-          return '<span class="star' + (i < b.rating ? ' on' : '') + '">★</span>';
+        [0, 1, 2, 3, 4].map(function (i) {
+          return '<span class="star' + (i < b.rating ? ' on' : '') + '">' + ic('i-star', 'ic solid') + '</span>';
         }).join('') +
       '</span>' +
-      '<span class="menu-arrow">›</span>' +
+      '<span class="menu-arrow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chevron-right"></use></svg></span>' +
     '</span>' +
   '</button>';
 }
 
 function emptyState(msg) {
-  return '<div class="empty-state"><span class="big">📚</span>' + esc(msg) + '</div>';
+  return '<div class="empty-state">' + ic('i-library', 'ic big') + esc(msg) + '</div>';
 }
 
 /* ---------- ホーム ---------- */
@@ -1558,13 +1657,13 @@ function renderHome() {
   bar.style.width = pct + '%';
   bar.classList.toggle('gold', monthLogs.length >= goal);
   $('#home-month-msg').textContent = monthLogs.length >= goal
-    ? 'もくひょう たっせい！ すごい！ 🎉'
+    ? 'もくひょう たっせい！ すごい！'
     : 'あと ' + (goal - monthLogs.length) + 'さつで もくひょう たっせい！';
 
   var recent = logs.slice(0, 3);
   $('#recent-list').innerHTML = recent.length
     ? recent.map(bookItemHTML).join('')
-    : '<div class="empty-state" style="padding:22px"><span class="big">📖</span>まだ きろくが ありません</div>';
+    : '<div class="empty-state" style="padding:22px">' + ic('i-book', 'ic big') + 'まだ きろくが ありません</div>';
 }
 
 /* ---------- リスト ---------- */
@@ -1645,21 +1744,21 @@ function renderStamp() {
 
   var cells = Math.max(goal, count, 12);
   cells = Math.ceil(cells / 6) * 6;
-  var icon = MONTH_STAMPS[selectedMonth] || '💮';
+  var icon = ic(MONTH_STAMPS[selectedMonth] || 'i-stamp');
   var html = '';
   for (var i = 0; i < cells; i++) {
     html += '<div class="stamp-cell' + (i < count ? ' filled' : '') + '">' + (i < count ? icon : '') + '</div>';
   }
   $('#stamp-grid').innerHTML = html;
   $('#stamp-msg').textContent = count >= goal
-    ? 'もくひょう たっせい！ よく がんばったね 🎉'
+    ? 'もくひょう たっせい！ よく がんばったね'
     : 'あと ' + (goal - count) + 'さつ！';
 }
 
 /* ---------- きろく・せってい ---------- */
 function renderData() {
   var on = !!meta.sound;
-  $('#sound-emoji').textContent = on ? '🔔' : '🔕';
+  $('#sound-emoji').innerHTML = ic(on ? 'i-bell' : 'i-bell-off');
   $('#sound-state').textContent = on ? 'ならす' : 'ならさない';
   $('#sound-mark').textContent = on ? 'オン' : 'オフ';
 
@@ -1693,15 +1792,16 @@ function renderDetail(params) {
       '</div>' +
     '</section>' +
     '<section class="card">' +
-      '<div class="card-head"><h2 class="card-title">⭐ おもしろさ</h2></div>' +
+      '<div class="card-head"><h2 class="card-title">' + ic('i-star', 'ic solid') + 'おもしろさ</h2></div>' +
       starsHTML(b.rating, b.id, '34px') +
     '</section>' +
     '<section class="card">' +
-      '<div class="card-head"><h2 class="card-title">✏️ かんそう</h2></div>' +
+      '<div class="card-head"><h2 class="card-title">' + ic('i-pen') + 'かんそう</h2></div>' +
       '<textarea class="input" id="detail-memo" maxlength="200" placeholder="おもしろかった ところ など">' + esc(b.memo) + '</textarea>' +
       '<button class="btn btn-blue block" data-act="save-memo" data-id="' + esc(b.id) + '" style="margin-top:9px">かんそうを ほぞん</button>' +
     '</section>' +
-    '<button class="btn btn-danger block" data-act="delete" data-id="' + esc(b.id) + '">❌ この きろくを けす</button>';
+    '<button class="btn btn-danger block" data-act="delete" data-id="' + esc(b.id) + '">' +
+      ic('i-x') + 'この きろくを けす</button>';
 }
 
 /* ---------- ふりかえり ---------- */
@@ -1744,7 +1844,7 @@ function renderStats() {
 
   box.innerHTML =
     '<section class="card">' +
-      '<div class="card-head"><h2 class="card-title">🪙 いままでの ごうけい</h2></div>' +
+      '<div class="card-head"><h2 class="card-title">' + ic('i-coin') + 'いままでの ごうけい</h2></div>' +
       '<div class="kpis">' +
         '<div class="kpi"><b>' + fmtNum(totalBooks) + '</b><span>さつ</span></div>' +
         '<div class="kpi"><b>' + fmtNum(totalPages) + '</b><span>ページ</span></div>' +
@@ -1753,14 +1853,14 @@ function renderStats() {
       '</div>' +
     '</section>' +
     '<section class="card">' +
-      '<div class="card-head"><h2 class="card-title">📅 つきごとの さっすう（12か月）</h2></div>' +
+      '<div class="card-head"><h2 class="card-title">' + ic('i-calendar') + 'つきごとの さっすう（12か月）</h2></div>' +
       '<div class="bars">' + bars + '</div>' +
       '<p class="muted tiny center" style="margin-top:8px">' +
         (best && best.n ? 'いちばん よんだ月：' + best.y + '年' + best.m + '月（' + best.n + 'さつ）' : 'これから きろくして いこう！') +
       '</p>' +
     '</section>' +
     '<section class="card">' +
-      '<div class="card-head"><h2 class="card-title">🔥 つづけて いる ようす</h2></div>' +
+      '<div class="card-head"><h2 class="card-title">' + ic('i-flame') + 'つづけて いる ようす</h2></div>' +
       '<div class="kpis">' +
         '<div class="kpi"><b>' + streak + '</b><span>れんぞく した 月</span></div>' +
         '<div class="kpi"><b>' + records.length + '</b><span>がくしゅうログの けんすう</span></div>' +
@@ -1999,7 +2099,7 @@ function doLookup(rawIsbn, auto) {
 
   if (lookingUp) return Promise.resolve();
   lookingUp = true;
-  box.innerHTML = '<p class="tiny muted">🔎 しらべています…</p>';
+  box.innerHTML = '<p class="tiny muted">' + ic('i-search') + ' しらべています…</p>';
 
   return lookupBook(isbn).then(function (r) {
     lookingUp = false;
@@ -2103,10 +2203,10 @@ function saveBook() {
       saveMeta();
       confetti();
       playFanfare();
-      celebrate('🎊', 'もくひょう たっせい！', m + '月に ' + count + 'さつ よんだよ');
+      celebrate('i-trophy', 'もくひょう たっせい！', m + '月に ' + count + 'さつ よんだよ');
     } else {
       playFanfare();
-      celebrate('🎉', 'きろく したよ！', title.length > 16 ? title.slice(0, 16) + '…' : title);
+      celebrate('i-book-check', 'きろく したよ！', title.length > 16 ? title.slice(0, 16) + '…' : title);
     }
   });
 }
@@ -2388,7 +2488,7 @@ function importData(file) {
     if (!incoming.length) { toast('きろくが 入っていません'); return; }
 
     showDialog({
-      emoji: '📂',
+      icon: 'i-folder',
       title: incoming.length + 'さつ ぶんの きろくが あります',
       body: 'いまの きろくは ' + logs.length + 'さつです。<br>どちらに しますか？',
       buttons: [
@@ -2436,7 +2536,7 @@ function copyForSpreadsheet() {
   var sp = 0, sy = 0;
   rows.forEach(function (b) {
     sp += b.pages; sy += b.price;
-    tsv += [b.date, b.title, b.author, '⭐'.repeat(b.rating), b.pages, sp, b.price, sy,
+    tsv += [b.date, b.title, b.author, '★'.repeat(b.rating), b.pages, sp, b.price, sy,
             b.memo.replace(/[\t\r\n]+/g, ' ')].join('\t') + '\n';
   });
 
@@ -2666,10 +2766,11 @@ function doInstall() {
     return;
   }
   showDialog({
-    emoji: '📲',
+    icon: 'i-install',
     title: 'アプリとして つかう',
     body: isIOS()
-      ? 'Safari の 下（または 右上）の <b>「共有」ボタン ⬆️</b> を おして、<br><b>「ホーム画面に追加」</b> を えらんでね。'
+      ? 'Safari の 下（または 右上）の <b>「共有」ボタン ' + ic('i-share') +
+        '</b> を おして、<br><b>「ホーム画面に追加」</b> を えらんでね。'
       : 'ブラウザの メニュー（⋮）から <b>「アプリをインストール」</b> または <b>「ホーム画面に追加」</b> を えらんでね。',
     buttons: [{ label: 'わかった', value: true, cls: 'btn-primary' }]
   });
