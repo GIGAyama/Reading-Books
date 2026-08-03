@@ -2,12 +2,10 @@
   "appName": "どくしょ ちょきんばこ",
   "repoName": "Reading-Books",
   "type": "A",
-
   "entry": "index.html",
   "manifest": "manifest.json",
   "serviceWorker": "sw.js",
   "iconsDir": "icons",
-
   "requiredFiles": [
     "LICENSE",
     ".gitignore",
@@ -23,7 +21,6 @@
     "icons/icon-maskable-512.png",
     "icons/apple-touch-icon-180.png"
   ],
-
   "sizeLimits": {
     "iconAnyBytes": 61440,
     "iconMaskableBytes": 61440,
@@ -33,15 +30,73 @@
     "sourceFileLines": 5000,
     "firstLoadScriptBytes": 307200
   },
-
   "connectSrcAllowed": [
     "https://api.openbd.jp",
     "https://www.googleapis.com",
     "https://ndlsearch.ndl.go.jp"
   ],
-
-  "appVersionFiles": ["sw.js", "js/app.js"],
-
+  "contrast": {
+    "_comment": "css/style.css の :root から値を読んで、実際に文字として使う組み合わせだけを見る。地の色は「いちばん暗い地」を含める。",
+    "backgrounds": [
+      "--panel",
+      "--bg",
+      "--primary-tint",
+      "--secondary-tint",
+      "--accent-tint"
+    ],
+    "textTokens": [
+      "--text",
+      "--primary",
+      "--primary-deep",
+      "--ink-soft",
+      "--ink-faint",
+      "--danger",
+      "--purple"
+    ],
+    "minRatio": 4.5,
+    "pairs": [
+      {
+        "fg": "--panel",
+        "bg": "--primary",
+        "min": 4.5,
+        "note": "btn-primary の白文字"
+      },
+      {
+        "fg": "--panel",
+        "bg": "--secondary",
+        "min": 4.5,
+        "note": "btn-blue の白文字"
+      },
+      {
+        "fg": "--panel",
+        "bg": "--ok",
+        "min": 4.5,
+        "note": "btn-green の白文字"
+      },
+      {
+        "fg": "--panel",
+        "bg": "--danger",
+        "min": 4.5,
+        "note": "btn-danger の白文字"
+      },
+      {
+        "fg": "--panel",
+        "bg": "--purple",
+        "min": 4.5,
+        "note": "btn-purple の白文字"
+      },
+      {
+        "fg": "--text",
+        "bg": "--accent",
+        "min": 4.5,
+        "note": "えらんでいるタブ（金の地に すみ色）"
+      }
+    ]
+  },
+  "appVersionFiles": [
+    "sw.js",
+    "js/app.js"
+  ],
   "securityExceptions": [
     {
       "rule": "csp-style-src-unsafe-inline",
@@ -56,10 +111,18 @@
       "reason": "maskable アイコンの絵がらが、中央80%のセーフゾーンをわずかに出ている（コインの上と、ちょきんばこの耳・足）。Android の実際のマスク（まる・すみまる）では欠けない。絵がらの変更はアプリの見た目そのものなので、報告にとどめて変更しない。"
     }
   ],
-
   "notApplicable": [
-    { "check": "presentation-mode", "reason": "一人ひとりの読書記録アプリで、一斉授業での提示を前提としない。個人の読書履歴を電子黒板に映すことは個人情報の観点からも推奨されない。" },
-    { "check": "server-guards", "reason": "サーバー（GAS）を持たない A型。" },
-    { "check": "lock-service", "reason": "同上。" }
+    {
+      "check": "presentation-mode",
+      "reason": "一人ひとりの読書記録アプリで、一斉授業での提示を前提としない。個人の読書履歴を電子黒板に映すことは個人情報の観点からも推奨されない。"
+    },
+    {
+      "check": "server-guards",
+      "reason": "サーバー（GAS）を持たない A型。"
+    },
+    {
+      "check": "lock-service",
+      "reason": "同上。"
+    }
   ]
 }

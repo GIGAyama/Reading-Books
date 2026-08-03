@@ -173,6 +173,62 @@ else if (/100dvh/.test(allStyle)) ok('D2', '100dvh を使っている');
 else warn('D2', '高さ指定に vh/dvh が見あたらない');
 
 /safe-area-inset/.test(allStyle) ? ok('D3', 'safe-area-inset を適用') : fail('D3', 'safe-area-inset がない');
+
+/* D8 コントラスト。
+   css/style.css の :root からトークンの値を読んで、
+   実際に「文字として」使う組み合わせだけを計算する。
+   Chromebook の液晶は視野角もコントラストも弱いので、
+   うすい灰色は ななめから見るとほとんど読めない。 */
+if (cfg.contrast) {
+  const tokens = {};
+  for (const m of allStyle.matchAll(/(--[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g)) {
+    if (!(m[1] in tokens)) tokens[m[1]] = m[2];
+  }
+  const rgbOf = (h) => {
+    h = h.replace('#', '');
+    if (h.length === 3) h = [...h].map((c) => c + c).join('');
+    return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  };
+  const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const lum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  const ratio = (a, b) => {
+    const l1 = lum(rgbOf(a)), l2 = lum(rgbOf(b));
+    const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  const min = cfg.contrast.minRatio ?? 4.5;
+  let worstName = null, worstVal = Infinity;
+  let missing = 0;
+
+  for (const fgName of cfg.contrast.textTokens || []) {
+    for (const bgName of cfg.contrast.backgrounds || []) {
+      const fg = tokens[fgName], bg = tokens[bgName];
+      if (!fg || !bg) { missing++; continue; }
+      const r = ratio(fg, bg);
+      if (r < min) fail('D8', `${fgName} を ${bgName} にのせると読めない`, `${fg} on ${bg} = ${r.toFixed(2)}:1（要 ${min}）`);
+      if (r < worstVal) { worstVal = r; worstName = `${fgName} on ${bgName}`; }
+    }
+  }
+  for (const p of cfg.contrast.pairs || []) {
+    const fg = tokens[p.fg], bg = tokens[p.bg];
+    if (!fg || !bg) { missing++; continue; }
+    const r = ratio(fg, bg);
+    const need = p.min ?? min;
+    if (r < need) fail('D8', `${p.note || p.fg + ' on ' + p.bg} が読めない`, `${fg} on ${bg} = ${r.toFixed(2)}:1（要 ${need}）`);
+    if (r < worstVal) { worstVal = r; worstName = p.note || `${p.fg} on ${p.bg}`; }
+  }
+
+  if (missing) warn('D8', `トークンを ${missing} 組ぶん 見つけられなかった`, 'quality.config.json の名前を確かめてください');
+
+  // まとめの1行。足りていない組み合わせが1つでもあるときに ✅ を出すと
+  // 「いちばん きびしいところが 2.11 なのに合格」に見えてしまうので、
+  // そのときは この行を出さない（上に ❌ が並んでいる）。
+  const anyContrastFail = results.some((r) => r.id === 'D8' && r.level === 'fail');
+  if (worstName && !anyContrastFail) {
+    ok('D8', 'コントラスト（いちばん きびしい組み合わせ）', `${worstName} = ${worstVal.toFixed(2)}:1`);
+  }
+}
 /clamp\(/.test(allStyle) ? ok('D4', 'clamp() による fluid type') : fail('D4', 'clamp() を使っていない');
 
 // D5 Canvas の DPR 補正

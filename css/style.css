@@ -296,8 +296,21 @@
   --purple:#5F5A8A;
 
   --ink:var(--text);
-  --ink-soft:#5D6E80;
-  --ink-faint:#9AA7B5;
+
+  /* ---- 文字のこさ（3段階） ----
+     Chromebook の液晶は 視野角もコントラストも弱く、うすい灰色は
+     ななめから見ると ほとんど読めない。ここは全部
+     「いちばん暗い地の色（--secondary-tint）にのせても 4.5:1 以上」で
+     そろえてある。数字は css/style.css を変えたら `npm run check` が見はる。
+
+     もとは --ink-soft:#5D6E80（最悪の地で 4.50 とちょうど境界）、
+     --ink-faint:#9AA7B5（同 2.11 で大きく不足）だった。
+     --ink-faint を 4.5:1 まで濃くすると 元の --ink-soft と ほぼ同じ濃さに
+     なってしまうので、--ink-soft も一段 濃くして 3段階の差を のこしている。
+     ブランドの6トークン（--bg --panel --text --primary --secondary --accent）は
+     いっさい変えていない。 */
+  --ink-soft:#4C5A69;      /* ふつうの ひかえめな文字。最悪の地で 6.06:1 */
+  --ink-faint:#5C6C7E;     /* いちばん ひかえめ（プレースホルダ・からっぽの表示）。同 4.60:1 */
   --line:#DCE1E8;
   --line-strong:var(--text);
   --surface:var(--panel);
