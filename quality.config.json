@@ -99,16 +99,8 @@
   ],
   "securityExceptions": [
     {
-      "rule": "csp-style-src-unsafe-inline",
-      "reason": "画面の HTML に style=\"...\" の書き方が数十か所ある。script 側は 'unsafe-inline' なしの厳格な設定にしてあり、外す価値と、全部を class に置きかえる際の見た目の崩れのリスクを比べて、今は残している。"
-    },
-    {
       "rule": "csp-meta-frame-ancestors-missing",
       "reason": "frame-ancestors は <meta> では効かず、GitHub Pages は応答ヘッダーを足せない。同じことを js/pwa-early.js の中で window.top !== window.self を見て代替している。"
-    },
-    {
-      "rule": "maskable-safe-zone",
-      "reason": "maskable アイコンの絵がらが、中央80%のセーフゾーンをわずかに出ている（コインの上と、ちょきんばこの耳・足）。Android の実際のマスク（まる・すみまる）では欠けない。絵がらの変更はアプリの見た目そのものなので、報告にとどめて変更しない。"
     }
   ],
   "notApplicable": [

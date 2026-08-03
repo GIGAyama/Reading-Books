@@ -615,6 +615,28 @@ select.input{
 .stars{display:flex;gap:1px;font-size:19px}
 .star{display:inline-flex;font-size:1em;line-height:1;color:#CBD3DB;padding:1px}
 .star.on{color:var(--accent)}
+
+/* ほし（おもしろさ）の えがきかた
+   ------------------------------------------------------------
+   ついている／ついていない を「色だけ」で つたえない（Part I §2-8）。
+   ぬりつぶし と 中ぬき で かたち も 変える。
+
+   あわせて --text の輪郭を付ける。金色（--accent）は 白地で 2.07:1 しかなく、
+   図形の目安 3:1 に とどかないため、うすい色が見えにくい児童には
+   「いくつ ついているか」が わからなかった。
+   輪郭（--text）は 白地で 15:1 あるので、ほしの かたち は かならず見える。
+   アプリ全体の「輪郭は太く・色は --text」という 決まりにも そろう。
+
+   paint-order:stroke は 輪郭を ぬりの下に えがく指定。
+   こうしないと 輪郭が ほしの内側に食いこんで 形が やせる。 */
+.star .ic.solid{
+  stroke:var(--text);
+  stroke-width:1.6;
+  stroke-linejoin:round;
+  paint-order:stroke fill;
+}
+.star:not(.on) .ic.solid{fill:var(--panel)}   /* まだ ついていない＝中ぬき */
+.star.on .ic.solid{fill:var(--accent)}        /* ついている＝金で ぬりつぶし */
 /* 押せる ほし（評価をつける がわ）だけ、指で押せる はんいを 44px にする。
    リストに ならぶ 読むだけの ほし（<span class="star">）は 小さいまま。 */
 button.star{
@@ -826,6 +848,65 @@ button.star{
   .install-only{display:none!important}
 }
 
+/* ============================================================
+   ちいさな 補助クラス（style="..." のかわり）
+   ------------------------------------------------------------
+   もとは HTML と js/app.js の中に style="..." を じか書きしていた。
+   それが残っていると CSP の style-src に 'unsafe-inline' を
+   許さざるをえず、万一の CSS 差しこみを 止められない。
+   よく使う ひとにぎりの指定だけを ここに出して、
+   style-src を 'self' だけに しぼれるようにした。
+
+   数字は もとの じか書きの値を そのまま うつしてある（見た目は変えない）。
+   ============================================================ */
+.mt-1{margin-top:4px}
+.mt-2{margin-top:6px}
+.mt-3{margin-top:8px}
+.mt-4{margin-top:9px}
+.mt-5{margin-top:10px}
+.mt-6{margin-top:12px}
+.mb-0{margin-bottom:0}
+.mb-1{margin-bottom:3px}
+.mb-2{margin-bottom:6px}
+.mb-5{margin-bottom:10px}
+.mb-6{margin-bottom:12px}
+.between{justify-content:space-between}
+.items-start{align-items:flex-start}
+.gap-10{gap:10px}
+.flex-1{flex:1}
+.flex-none{flex:0 0 auto}
+.pad-22{padding:22px}
+
+.txt-primary{color:var(--primary)}
+.txt-danger{color:var(--danger)}
+.txt-ok{color:var(--ok)}
+
+.ic-46{font-size:46px}
+.ic-48{font-size:48px}
+.fs-13{font-size:13px}
+.fs-14{font-size:14px}
+.fs-20{font-size:20px;font-weight:900;line-height:1.4}
+
+/* 目標のすうじを いれる ちいさな入力欄 */
+.input-goal{width:64px;text-align:center;padding:6px 4px}
+
+/* label.field の <span> と おなじ見た目の 見出し（label ではない場所むけ） */
+.field-label{display:block;font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:3px}
+
+/* 「ぜんぶ けす」の カード（あぶない操作なので わくを 赤みに） */
+.card-danger-edge{border-color:#E7C6CA}
+
+/* 本が みつかったときの カード */
+.card-found{border-color:var(--secondary);background:var(--panel);padding:11px}
+
+/* ほし の 大きさ（starsHTML から よぶ） */
+.stars.stars-md{font-size:30px}
+.stars.stars-lg{font-size:34px}
+
+/* 進み具合のバーは 0% から はじめる（あとは JS が style.width で のばす。
+   要素の .style を JS から さわるのは CSP の対象外なので そのままでよい） */
+.progress > span{width:0}
+
 /* ---------- 読み上げソフト むけの かくし文字 ----------
    目には見えないが、スクリーンリーダーには とどく。
    display:none にすると 読み上げられなくなるので使わない。 */
@@ -899,6 +980,7 @@ button.star{
   /* なまえは 紙の上に 手で書いてもらう（アプリは氏名を持たない） */
   .pr-name{display:flex;gap:8mm;align-items:flex-end;margin-bottom:4mm;font-size:11pt}
   .pr-name .pr-line{flex:1;border-bottom:1px solid #000;height:7mm}
+  .pr-name .pr-line-short{max-width:40mm}
 
   .pr-total{
     display:flex;justify-content:space-around;gap:4mm;

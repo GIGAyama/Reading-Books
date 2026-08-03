@@ -12,7 +12,7 @@
    0. 定数
    ============================================================ */
 var APP_ID      = 'reading-books';   // 学習ログの appId（仕様書 §3.1）
-var APP_VERSION = '2.4.0';
+var APP_VERSION = '2.5.0';
 
 /* このアプリ専用の保存キー。
    `study.records.v1`（共通の学習ログ）は【ここに含めない】。
@@ -248,7 +248,7 @@ function celebrate(icon, text, sub) {
   var el = document.createElement('div');
   el.className = 'celebrate';
   el.innerHTML = '<div class="box">' + ic(icon, 'ic big') + '<b>' + esc(text) + '</b>' +
-    (sub ? '<p class="muted tiny" style="margin-top:6px">' + esc(sub) + '</p>' : '') + '</div>';
+    (sub ? '<p class="muted tiny mt-2">' + esc(sub) + '</p>' : '') + '</div>';
   document.body.appendChild(el);
   setTimeout(function () { el.remove(); }, 2400);
 }
@@ -695,8 +695,10 @@ var selectedMonth = new Date().getMonth() + 1;
 var listRange = 'month';
 var listQuery = '';
 
+/* size は 'md'（30px）か 'lg'（34px）。CSP で style="..." を禁じたので、
+   大きさは css/style.css の .stars-md / .stars-lg で つける。 */
 function starsHTML(rating, id, size) {
-  var out = '<div class="stars"' + (size ? ' style="font-size:' + size + '"' : '') + '>';
+  var out = '<div class="stars' + (size ? ' stars-' + size : '') + '">';
   for (var i = 1; i <= 5; i++) {
     out += '<button class="star' + (i <= rating ? ' on' : '') + '" data-act="rate" data-id="' + esc(id) +
            '" data-star="' + i + '" aria-label="ほし' + i + '">' + ic('i-star', 'ic solid') + '</button>';
@@ -756,7 +758,7 @@ function renderHome() {
   var recent = logs.slice(0, 3);
   $('#recent-list').innerHTML = recent.length
     ? recent.map(bookItemHTML).join('')
-    : '<div class="empty-state" style="padding:22px">' + ic('i-book', 'ic big') + 'まだ きろくが ありません</div>';
+    : '<div class="empty-state pad-22">' + ic('i-book', 'ic big') + 'まだ きろくが ありません</div>';
 }
 
 /* ---------- リスト ---------- */
@@ -876,22 +878,22 @@ function renderDetail(params) {
   box.innerHTML =
     '<section class="card">' +
       '<div class="card-head"><span class="chip">' + d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + '</span></div>' +
-      '<h2 style="font-size:20px;font-weight:900;line-height:1.4">' + esc(b.title) + '</h2>' +
-      '<p class="muted" style="margin-top:4px">' + esc(b.author) + '</p>' +
-      '<div class="kpis" style="margin-top:12px">' +
+      '<h2 class="fs-20">' + esc(b.title) + '</h2>' +
+      '<p class="muted mt-1">' + esc(b.author) + '</p>' +
+      '<div class="kpis mt-6">' +
         '<div class="kpi"><b>' + fmtNum(b.pages) + '</b><span>ページ</span></div>' +
         '<div class="kpi"><b>' + fmtNum(b.price) + '</b><span>えん</span></div>' +
-        (b.isbn ? '<div class="kpi"><b style="font-size:13px">' + esc(b.isbn) + '</b><span>ISBN</span></div>' : '') +
+        (b.isbn ? '<div class="kpi"><b class="fs-13">' + esc(b.isbn) + '</b><span>ISBN</span></div>' : '') +
       '</div>' +
     '</section>' +
     '<section class="card">' +
       '<div class="card-head"><h2 class="card-title">' + ic('i-star', 'ic solid') + 'おもしろさ</h2></div>' +
-      starsHTML(b.rating, b.id, '34px') +
+      starsHTML(b.rating, b.id, 'lg') +
     '</section>' +
     '<section class="card">' +
       '<div class="card-head"><h2 class="card-title">' + ic('i-pen') + 'かんそう</h2></div>' +
       '<textarea class="input" id="detail-memo" maxlength="200" placeholder="おもしろかった ところ など">' + esc(b.memo) + '</textarea>' +
-      '<button class="btn btn-blue block" data-act="save-memo" data-id="' + esc(b.id) + '" style="margin-top:9px">かんそうを ほぞん</button>' +
+      '<button class="btn btn-blue block mt-4" data-act="save-memo" data-id="' + esc(b.id) + '">かんそうを ほぞん</button>' +
     '</section>' +
     '<button class="btn btn-danger block" data-act="delete" data-id="' + esc(b.id) + '">' +
       ic('i-x') + 'この きろくを けす</button>';
@@ -931,7 +933,7 @@ function renderStats() {
     var isNow = x.y === now.getFullYear() && x.m === now.getMonth() + 1;
     return '<div class="bar-col">' +
       '<span class="bar-val">' + (x.n || '') + '</span>' +
-      '<div class="bar' + (x.n ? (isNow ? ' now' : '') : ' zero') + '" style="height:' + Math.max(h, x.n ? 8 : 2) + '%"></div>' +
+      '<div class="bar' + (x.n ? (isNow ? ' now' : '') : ' zero') + '" data-h="' + Math.max(h, x.n ? 8 : 2) + '"></div>' +
       '<span class="bar-cap">' + x.m + '</span></div>';
   }).join('');
 
@@ -948,7 +950,7 @@ function renderStats() {
     '<section class="card">' +
       '<div class="card-head"><h2 class="card-title">' + ic('i-calendar') + 'つきごとの さっすう（12か月）</h2></div>' +
       '<div class="bars">' + bars + '</div>' +
-      '<p class="muted tiny center" style="margin-top:8px">' +
+      '<p class="muted tiny center mt-3">' +
         (best && best.n ? 'いちばん よんだ月：' + best.y + '年' + best.m + '月（' + best.n + 'さつ）' : 'これから きろくして いこう！') +
       '</p>' +
     '</section>' +
@@ -959,10 +961,19 @@ function renderStats() {
         '<div class="kpi"><b>' + records.length + '</b><span>がくしゅうログの けんすう</span></div>' +
         '<div class="kpi"><b>' + Math.round(activeMs / 60000) + '</b><span>きろくに つかった 分</span></div>' +
       '</div>' +
-      '<p class="muted tiny" style="margin-top:10px">' +
+      '<p class="muted tiny mt-5">' +
         'がくしゅうログ（study.v1）は この きかいの なかだけに たまります。' +
       '</p>' +
     '</section>';
+
+  /* 棒グラフの 高さは 月ごとに 変わるので クラスでは あらわせない。
+     HTML には data-h（％）だけを のせておき、置いたあとに
+     element.style で のばす。
+     style="..." を HTML に じか書きすると CSP（style-src 'self'）に
+     ひっかかるが、element.style の書きかえは CSSOM の操作なので通る。 */
+  $$('.bar[data-h]', box).forEach(function (el) {
+    el.style.height = el.getAttribute('data-h') + '%';
+  });
 }
 
 /* ============================================================
@@ -981,7 +992,7 @@ function renderEntry() {
   $('#entry-pages').value = entryState.pages;
   $('#entry-price').value = entryState.price;
   $('#entry-memo').value = entryState.memo;
-  $('#entry-stars').innerHTML = starsHTML(entryState.rating, '__entry__', '30px');
+  $('#entry-stars').innerHTML = starsHTML(entryState.rating, '__entry__', 'md');
   ['#entry-title', '#entry-pages', '#entry-price'].forEach(function (s) { $(s).classList.remove('error'); });
 
   // えらんでいる年月が「いま」と ちがうときは、どの月に きろくされるか しらせる
@@ -1182,7 +1193,7 @@ function doLookup(rawIsbn, auto) {
   var isbn = toIsbn13(rawIsbn);
   var box = $('#lookup-result');
   if (!isbn) {
-    box.innerHTML = '<p class="tiny" style="color:var(--danger)">978で はじまる 13けたの すうじを いれてね</p>';
+    box.innerHTML = '<p class="tiny txt-danger">978で はじまる 13けたの すうじを いれてね</p>';
     $('#entry-isbn').classList.add('error');
     return Promise.resolve();
   }
@@ -1197,7 +1208,7 @@ function doLookup(rawIsbn, auto) {
   return lookupBook(isbn).then(function (r) {
     lookingUp = false;
     if (!r.title) {
-      box.innerHTML = '<p class="tiny" style="color:var(--danger)">みつかりませんでした。' +
+      box.innerHTML = '<p class="tiny txt-danger">みつかりませんでした。' +
         '下の らんに じぶんで かいて きろく できます。</p>';
       Study.markLookup('manual');
       return;
@@ -1213,11 +1224,11 @@ function doLookup(rawIsbn, auto) {
     if (!r.pages) missing.push('ページ');
     if (!r.price) missing.push('ねだん');
     box.innerHTML =
-      '<div class="card" style="border-color:var(--secondary);background:var(--panel);padding:11px">' +
+      '<div class="card card-found">' +
         '<span class="chip blue">みつけた！</span>' +
-        '<p style="font-size:14px;font-weight:900;margin-top:6px">' + esc(r.title) + '</p>' +
+        '<p class="fs-14 mt-2">' + esc(r.title) + '</p>' +
         (missing.length
-          ? '<p class="tiny" style="color:var(--danger);margin-top:4px">※ ' + esc(missing.join('と')) +
+          ? '<p class="tiny txt-danger mt-1">※ ' + esc(missing.join('と')) +
             ' が わからなかったよ。本を みて かいてね</p>'
           : '') +
       '</div>';
@@ -1226,7 +1237,7 @@ function doLookup(rawIsbn, auto) {
     if (auto) playBeep();
   })['catch'](function () {
     lookingUp = false;
-    box.innerHTML = '<p class="tiny" style="color:var(--danger)">インターネットに つながらなかったので、' +
+    box.innerHTML = '<p class="tiny txt-danger">インターネットに つながらなかったので、' +
       'じぶんで かいて きろくしてね</p>';
     Study.markLookup('manual');
   });
@@ -1638,7 +1649,7 @@ function buildPrintSheet() {
       '<p class="pr-sub">よんだ本の きろく　／　いんさつした日：' + esc(fmtDate(new Date())) + '</p>' +
     '</div>' +
     '<div class="pr-name"><span>なまえ</span><span class="pr-line"></span>' +
-    '<span>クラス</span><span class="pr-line" style="max-width:40mm"></span></div>';
+    '<span>クラス</span><span class="pr-line pr-line-short"></span></div>';
 
   if (!rows.length) {
     sheet.innerHTML = head + '<p class="pr-empty">まだ きろくが ありません。</p>';
@@ -1770,7 +1781,7 @@ function onAction(act, el) {
       var star = toInt(el.getAttribute('data-star'));
       if (id === '__entry__') {
         entryState.rating = (entryState.rating === star) ? 0 : star;
-        $('#entry-stars').innerHTML = starsHTML(entryState.rating, '__entry__', '30px');
+        $('#entry-stars').innerHTML = starsHTML(entryState.rating, '__entry__', 'md');
       } else {
         var b = findLog(id);
         if (b) {
