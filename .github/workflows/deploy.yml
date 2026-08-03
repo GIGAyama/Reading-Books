@@ -1,0 +1,51 @@
+name: 品質ゲート と GitHub Pages への公開
+
+# ビルドはしない（単一HTML構成／A型）。
+# main へ入る前に品質ゲートを通し、通ったものだけを Pages へ出す。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: GIGA Standard v4 品質ゲート
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # 依存パッケージを持たないので npm ci は不要。
+      # 検査スクリプトは Node の標準ライブラリだけで動く。
+      - name: 品質ゲート
+        run: npm run check
+
+  deploy:
+    name: GitHub Pages へ公開
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

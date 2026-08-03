@@ -1,0 +1,65 @@
+{
+  "appName": "どくしょ ちょきんばこ",
+  "repoName": "Reading-Books",
+  "type": "A",
+
+  "entry": "index.html",
+  "manifest": "manifest.json",
+  "serviceWorker": "sw.js",
+  "iconsDir": "icons",
+
+  "requiredFiles": [
+    "LICENSE",
+    ".gitignore",
+    ".github/dependabot.yml",
+    "README.md",
+    "MANUAL.md",
+    "manifest.json",
+    "sw.js",
+    "offline.html",
+    "icons/icon-192.png",
+    "icons/icon-512.png",
+    "icons/icon-maskable-192.png",
+    "icons/icon-maskable-512.png",
+    "icons/apple-touch-icon-180.png"
+  ],
+
+  "sizeLimits": {
+    "iconAnyBytes": 61440,
+    "iconMaskableBytes": 61440,
+    "faviconBytes": 30720,
+    "imageBytes": 153600,
+    "sourceFileBytes": 409600,
+    "sourceFileLines": 5000,
+    "firstLoadScriptBytes": 307200
+  },
+
+  "connectSrcAllowed": [
+    "https://api.openbd.jp",
+    "https://www.googleapis.com",
+    "https://ndlsearch.ndl.go.jp"
+  ],
+
+  "appVersionFiles": ["sw.js", "js/app.js"],
+
+  "securityExceptions": [
+    {
+      "rule": "csp-style-src-unsafe-inline",
+      "reason": "画面の HTML に style=\"...\" の書き方が数十か所ある。script 側は 'unsafe-inline' なしの厳格な設定にしてあり、外す価値と、全部を class に置きかえる際の見た目の崩れのリスクを比べて、今は残している。"
+    },
+    {
+      "rule": "csp-meta-frame-ancestors-missing",
+      "reason": "frame-ancestors は <meta> では効かず、GitHub Pages は応答ヘッダーを足せない。同じことを js/pwa-early.js の中で window.top !== window.self を見て代替している。"
+    },
+    {
+      "rule": "maskable-safe-zone",
+      "reason": "maskable アイコンの絵がらが、中央80%のセーフゾーンをわずかに出ている（コインの上と、ちょきんばこの耳・足）。Android の実際のマスク（まる・すみまる）では欠けない。絵がらの変更はアプリの見た目そのものなので、報告にとどめて変更しない。"
+    }
+  ],
+
+  "notApplicable": [
+    { "check": "presentation-mode", "reason": "一人ひとりの読書記録アプリで、一斉授業での提示を前提としない。個人の読書履歴を電子黒板に映すことは個人情報の観点からも推奨されない。" },
+    { "check": "server-guards", "reason": "サーバー（GAS）を持たない A型。" },
+    { "check": "lock-service", "reason": "同上。" }
+  ]
+}

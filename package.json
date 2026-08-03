@@ -1,0 +1,15 @@
+{
+  "name": "reading-books",
+  "version": "2.4.0",
+  "private": true,
+  "description": "どくしょ ちょきんばこ — よんだ本を バーコードで きろくして、さつ数・ページ数・きんがくを ためていく どくしょノート",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "check": "node scripts/check-project.mjs",
+    "serve": "npx --yes serve . -p 8099"
+  }
+}
