@@ -1,6 +1,6 @@
 {
   "name": "reading-books",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "private": true,
   "description": "どくしょ ちょきんばこ — よんだ本を バーコードで きろくして、さつ数・ページ数・きんがくを ためていく どくしょノート",
   "license": "MIT",
@@ -10,6 +10,11 @@
   },
   "scripts": {
     "check": "node scripts/check-project.mjs",
-    "serve": "npx --yes serve . -p 8099"
+    "test": "npm run check && npm run test:browser",
+    "test:browser": "node tests/browser.test.mjs",
+    "serve": "node -e \"import('./tests/server.mjs').then(m=>m.startServer(process.cwd(),8099).then(s=>console.log('→ '+s.url)))\""
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
   }
 }

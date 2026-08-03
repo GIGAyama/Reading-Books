@@ -12,12 +12,17 @@
 <!-- ② 外へ出ていく通信を、必要な3つの書誌サービスだけに しぼる。
      フォントも画像もスクリプトも すべて自分のサーバーから配っているので、
      ここに書いた以外への通信はブラウザが遮断する。
-     style-src に 'unsafe-inline' があるのは、HTML の中で
-     style="..." の書き方をしている箇所が残っているため。 -->
+
+     style-src も script-src も 'unsafe-inline' なしの きびしい設定。
+     そのために style="..." の じか書きを すべて やめ、
+     css/style.css の 補助クラスに 置きかえてある。
+     大きさが そのつど 変わるところ（グラフの棒の高さ・進み具合のバー）は
+     JavaScript から element.style で 動かしている。
+     こちらは CSSOM の操作なので CSP の対象外。 -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self';
-  style-src 'self' 'unsafe-inline';
+  style-src 'self';
   img-src 'self' data: blob:;
   font-src 'self';
   media-src 'self' blob:;
@@ -51,7 +56,6 @@
 <meta name="format-detection" content="telephone=no">
 
 <link rel="stylesheet" href="css/style.css">
-</head>
 </head>
 <body>
 
@@ -155,8 +159,8 @@
                 <h2 class="card-title" id="home-month-title">こんげつの ようす</h2>
                 <span class="chip" id="home-month-chip">0 / 10 さつ</span>
               </div>
-              <div class="progress"><span id="home-progress" style="width:0%"></span></div>
-              <p class="muted tiny center" id="home-month-msg" style="margin-top:6px"></p>
+              <div class="progress"><span id="home-progress"></span></div>
+              <p class="muted tiny center mt-2" id="home-month-msg"></p>
             </section>
 
           </div>
@@ -195,7 +199,7 @@
     <section class="screen" data-screen="tab-list" aria-label="よんだ本のリスト">
       <div class="wrap">
         <section class="card">
-          <div class="row wrap" style="justify-content:space-between">
+          <div class="row wrap between">
             <div class="row">
               <select class="input select-sm" id="year-select" aria-label="とし"></select>
               <select class="input select-sm" id="month-select" aria-label="つき"></select>
@@ -206,11 +210,11 @@
               <button data-act="range" data-range="all">ぜんぶ</button>
             </div>
           </div>
-          <div class="row search-row" style="margin-top:9px">
+          <div class="row search-row mt-4">
             <svg class="ic search-ic" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
             <input class="input has-ic" id="list-search" type="search" placeholder="本の なまえで さがす" autocomplete="off">
           </div>
-          <div class="row" style="margin-top:9px;justify-content:space-between">
+          <div class="row mt-4 between">
             <span class="chip" id="list-count">0 さつ</span>
             <span class="chip blue" id="list-pages">0 ページ</span>
             <span class="chip gold" id="list-price">0 えん</span>
@@ -226,15 +230,15 @@
     <section class="screen" data-screen="tab-stamp" aria-label="スタンプちょう">
       <div class="wrap">
         <section class="card">
-          <div class="row wrap" style="justify-content:space-between">
+          <div class="row wrap between">
             <div class="row">
               <select class="input select-sm" id="year-select-2" aria-label="とし"></select>
               <select class="input select-sm" id="month-select-2" aria-label="つき"></select>
             </div>
             <div class="row">
               <span class="muted tiny">もくひょう</span>
-              <input class="input" id="goal-input" type="number" min="1" max="99" inputmode="numeric"
-                     style="width:64px;text-align:center;padding:6px 4px" aria-label="こんげつのもくひょう">
+              <input class="input input-goal" id="goal-input" type="number" min="1" max="99" inputmode="numeric"
+                     aria-label="こんげつのもくひょう">
               <span class="muted tiny">さつ</span>
             </div>
           </div>
@@ -245,10 +249,10 @@
             <h2 class="card-title" id="stamp-title">スタンプ帳</h2>
             <span class="chip" id="stamp-count">0 / 10</span>
           </div>
-          <div class="progress"><span id="stamp-progress" style="width:0%"></span></div>
+          <div class="progress"><span id="stamp-progress"></span></div>
           <div class="progress-marks" id="stamp-marks"></div>
-          <div class="stamp-grid" id="stamp-grid" style="margin-top:10px"></div>
-          <p class="muted tiny center" id="stamp-msg" style="margin-top:10px"></p>
+          <div class="stamp-grid mt-5" id="stamp-grid"></div>
+          <p class="muted tiny center mt-5" id="stamp-msg"></p>
         </section>
       </div>
     </section>
@@ -301,7 +305,7 @@
       <div class="scan-screen">
         <div class="scan-stage" id="scan-stage">
           <div class="scan-idle" id="scan-idle">
-            <svg class="ic" aria-hidden="true" focusable="false" style="font-size:46px"><use href="#i-camera"></use></svg>
+            <svg class="ic ic-46" aria-hidden="true" focusable="false"><use href="#i-camera"></use></svg>
             <p id="scan-idle-msg">カメラの じゅんびを しています…</p>
           </div>
           <div class="scan-frame" id="scan-frame" hidden>
@@ -310,7 +314,7 @@
             <span class="scan-line"></span>
           </div>
           <p class="scan-hint" id="scan-hint" hidden>本の うらの <b>978</b> ではじまる バーコードに あわせてね</p>
-          <div class="scan-ok" id="scan-ok"><svg class="ic" aria-hidden="true" focusable="false" style="font-size:48px;color:var(--ok)"><use href="#i-check"></use></svg><b style="color:var(--primary)">よめました！</b></div>
+          <div class="scan-ok" id="scan-ok"><svg class="ic ic-48 txt-ok" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg><b class="txt-primary">よめました！</b></div>
         </div>
         <div class="scan-bar">
           <button class="btn btn-ghost" data-act="torch" id="torch-btn" hidden><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-flash"></use></svg>ライト</button>
@@ -328,9 +332,9 @@
           <div class="row">
             <input class="input" id="entry-isbn" type="text" inputmode="numeric" autocomplete="off"
                    placeholder="978…" aria-label="ISBN">
-            <button class="btn btn-blue" data-act="lookup" style="flex:0 0 auto">さがす</button>
+            <button class="btn btn-blue flex-none" data-act="lookup">さがす</button>
           </div>
-          <div id="lookup-result" style="margin-top:9px"></div>
+          <div id="lookup-result" class="mt-4"></div>
         </section>
 
         <section class="card">
@@ -339,17 +343,17 @@
             <input class="input" id="entry-title" type="text" autocomplete="off" maxlength="120"></label>
           <label class="field"><span>かいた ひと</span>
             <input class="input" id="entry-author" type="text" autocomplete="off" maxlength="80"></label>
-          <div class="row" style="gap:10px;align-items:flex-start">
-            <label class="field" style="flex:1"><span>ページ ＊</span>
+          <div class="row gap-10 items-start">
+            <label class="field flex-1"><span>ページ ＊</span>
               <input class="input" id="entry-pages" type="number" inputmode="numeric" min="1" max="20000"></label>
-            <label class="field" style="flex:1"><span>ねだん(えん)</span>
+            <label class="field flex-1"><span>ねだん(えん)</span>
               <input class="input" id="entry-price" type="number" inputmode="numeric" min="0" max="1000000"></label>
           </div>
           <div class="field">
-            <span style="display:block;font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:3px">おもしろさ</span>
+            <span class="field-label">おもしろさ</span>
             <div id="entry-stars"></div>
           </div>
-          <label class="field" style="margin-bottom:0"><span>かんそう（かかなくても いいよ）</span>
+          <label class="field mb-0"><span>かんそう（かかなくても いいよ）</span>
             <textarea class="input" id="entry-memo" maxlength="200" placeholder="おもしろかった ところ など"></textarea></label>
         </section>
 
@@ -374,7 +378,7 @@
       <div class="wrap">
         <section class="card">
           <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>データを のこす</h2></div>
-          <p class="muted tiny" style="margin-bottom:10px">きかいを かえるときや、まんいちに そなえて ファイルに のこせます。</p>
+          <p class="muted tiny mb-5">きかいを かえるときや、まんいちに そなえて ファイルに のこせます。</p>
           <div class="stack">
             <button class="btn btn-blue block" data-act="export"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-save"></use></svg>ファイルに ほぞんする</button>
             <button class="btn btn-green block" data-act="copy"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-table"></use></svg>ひょう(スプレッドシート)に コピー</button>
@@ -383,14 +387,14 @@
 
         <section class="card">
           <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-book"></use></svg>のこした データを よむ</h2></div>
-          <p class="muted tiny" style="margin-bottom:10px">ほぞんした ファイル(.json)を えらんでください。<br>いまの きろくに <b>くわえる</b>か、<b>ぜんぶ いれかえる</b>か えらべます。</p>
+          <p class="muted tiny mb-5">ほぞんした ファイル(.json)を えらんでください。<br>いまの きろくに <b>くわえる</b>か、<b>ぜんぶ いれかえる</b>か えらべます。</p>
           <button class="btn btn-purple block" data-act="import"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-folder"></use></svg>ファイルを えらぶ</button>
           <input type="file" id="import-file" accept=".json,application/json" hidden>
         </section>
 
         <section class="card">
           <div class="card-head"><h2 class="card-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-print"></use></svg>紙に いんさつする</h2></div>
-          <p class="muted tiny" style="margin-bottom:10px">よんだ本の きろくを A4の紙に いんさつします。<br>おうちの人や 先生に みせる ときに つかってね。</p>
+          <p class="muted tiny mb-5">よんだ本の きろくを A4の紙に いんさつします。<br>おうちの人や 先生に みせる ときに つかってね。</p>
           <button class="btn btn-ghost block" data-act="print"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-print"></use></svg>いんさつの がめんを ひらく</button>
         </section>
 
@@ -431,9 +435,9 @@
     <!-- ========== ぜんぶけす（かいそう1） ========== -->
     <section class="screen" data-screen="reset" aria-label="きろくをぜんぶけす">
       <div class="wrap">
-        <section class="card" style="border-color:#E7C6CA">
-          <div class="card-head"><h2 class="card-title" style="color:var(--danger)"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-alert"></use></svg>きろくを ぜんぶ けす</h2></div>
-          <p class="tiny" style="margin-bottom:12px">
+        <section class="card card-danger-edge">
+          <div class="card-head"><h2 class="card-title txt-danger"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-alert"></use></svg>きろくを ぜんぶ けす</h2></div>
+          <p class="tiny mb-6">
             よんだ本の きろく・もくひょう・スタンプが <b>ぜんぶ きえます</b>。<br>
             もとには もどせません。けす まえに 「データを のこす」で ほぞんして おくと あんしんです。
           </p>

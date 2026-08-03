@@ -1,7 +1,14 @@
-name: 品質ゲート と GitHub Pages への公開
+name: 品質ゲート
 
+# 公開（GitHub Pages）は「ブランチからデプロイ」の設定で行っている。
+# つまり main に入った時点で GitHub がそのまま公開する。
+#
+# ここから actions/deploy-pages で公開しようとすると、
+# 公開のしくみが「GitHub Actions」に切りかわってしまい、
+# 「ワークフローが壊れると公開も止まる」状態になる。
+# そのため このワークフローは検査だけを行い、公開には手を出さない。
+#
 # ビルドはしない（単一HTML構成／A型）。
-# main へ入る前に品質ゲートを通し、通ったものだけを Pages へ出す。
 
 on:
   push:
@@ -12,10 +19,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
   check:
     name: GIGA Standard v4 品質ゲート
@@ -25,27 +28,29 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      # 依存パッケージを持たないので npm ci は不要。
-      # 検査スクリプトは Node の標準ライブラリだけで動く。
-      - name: 品質ゲート
+
+      # 静的な検査。依存パッケージを持たないので npm ci は不要で、
+      # Node の標準ライブラリだけで動く。
+      - name: 品質ゲート（静的）
         run: npm run check
 
-  deploy:
-    name: GitHub Pages へ公開
-    needs: check
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+  browser:
+    name: 実機（Chromium）での検査
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/setup-node@v4
         with:
-          path: .
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          node-version: '20'
+
+      # 実機の検査だけは Playwright（と Chromium）が要る。
+      - name: Playwright を入れる
+        run: npm ci
+
+      - name: Chromium を入れる
+        run: npx playwright install --with-deps chromium
+
+      # 320px の横スクロール・CSP違反・タップ領域44px・文字のコントラスト・
+      # 印刷シート・「サーバーを止めてもアプリが起動するか」を実際に見る。
+      - name: 実機での検査
+        run: npm run test:browser

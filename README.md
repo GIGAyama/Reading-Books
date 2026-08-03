@@ -235,6 +235,11 @@ vendor/quagga.min.js      バーコード読取ライブラリ QuaggaJS 0.12.1�
 docs/study-log.md         学習ログの設計メモ
 AUDIT.md                  GIGA Standard v4 による現状監査
 MANUAL.md                 先生向けの手引き
+ROLLOUT.md                他のリポジトリへ持っていく知見
+scripts/check-project.mjs 品質ゲート（静的・依存なし）
+quality.config.json       品質ゲートの設定（コントラストの組み合わせ・例外の理由）
+tests/browser.test.mjs    実機（Chromium）での検査
+tests/server.mjs          検査用の静的サーバー（/Reading-Books/ の下で配信する）
 ```
 
 **外部 CDN には一切依存していません。** Web フォントも `fonts/` から自分で配ります
@@ -254,14 +259,19 @@ MANUAL.md                 先生向けの手引き
 | 保存場所 | 児童の端末の `localStorage` のみ。サーバーへ送りません |
 | API キー | 使いません（openBD / Google Books / NDL はいずれも鍵なしの公開API） |
 | 外へ出る通信 | 書誌検索の3件のみ。CSP の `connect-src` でそれ以外を遮断しています |
-| CSP | `index.html` の `<meta http-equiv>` で宣言。`script-src 'self'`（インライン script なし） |
+| CSP | `index.html` の `<meta http-equiv>` で宣言。`script-src 'self'` / `style-src 'self'`（インラインの script も style も無し） |
 | クリックジャッキング | `frame-ancestors` は `<meta>` では効かず、GitHub Pages はヘッダーを足せないため、<br>`js/pwa-early.js` で `window.top !== window.self` を見張ります |
 | `localStorage.clear()` | **使いません。** 自アプリの3キーだけを消します |
 | Service Worker | `localStorage` に一切触れません。`reading-books-` で始まる自分のキャッシュだけを掃除します |
 
-`style-src` にだけ `'unsafe-inline'` が残っています。
-HTML の中に `style="..."` の書き方が数十か所あるためです。
-script 側は `'unsafe-inline'` なしの厳格な設定です。
+`'unsafe-inline'` は script 側にも style 側にもありません。
+`style="..."` の直書きはすべて `css/style.css` の補助クラス（`.mt-4` `.txt-danger` など）に
+置きかえてあります。**新しい画面を足すときも `style="..."` を書かないでください**
+（CSP に弾かれて、その指定だけが無視されます）。
+
+大きさがそのつど変わるところ（グラフの棒の高さ・進み具合のバー）は
+JavaScript から `element.style.height = …` で動かしています。
+これは CSSOM の操作なので CSP の対象外です。
 
 ## ⚠️ 制限とクォータ
 
@@ -287,6 +297,27 @@ Service Worker とカメラは `https://` または `http://localhost` でのみ
 `manifest.json` の `scope` が `/Reading-Books/` のため、
 **リポジトリ名のディレクトリの下で配信してください**（例：`site/Reading-Books/`）。
 
+### 検査
+
+```sh
+npm run check          # 静的な検査（依存パッケージ不要）
+npm run test:browser   # 実機（Chromium）での検査。playwright が要る
+npm test               # 両方
+```
+
+`npm run test:browser` は Chromium を立ちあげて、次を実際に確かめます。
+
+| 見るもの | 中身 |
+|---|---|
+| 横スクロール | 320 / 375 / 810 / 1366 / 1920px |
+| console・CSP | 全画面を回ってエラー0件・`Refused to` 0件 |
+| 空振り検知 | 検査用の記録がリストに出ているか（出ていないと以下が素通りする） |
+| タップ領域 | 44px 未満の押せる要素が無いか（`::after` で広げた分も数える） |
+| コントラスト | 描画された文字色と、重なりを解決した地の色から計算。プレースホルダ（疑似要素）と「からっぽの表示」も含む |
+| 印刷 | 印刷シートが組み立てられ、画面用の要素が出ないか |
+| maskable | 絵が中央80%の**まる**に収まっているか（四角で見ると甘くなる） |
+| オフライン | **サーバーを本当に止めて**アプリが起動するか |
+
 ### 変更したら確認すること
 
 - [ ] 320px 幅で横スクロールが出ない（DevTools のレスポンシブモード）
@@ -294,7 +325,8 @@ Service Worker とカメラは `https://` または `http://localhost` でのみ
 - [ ] Application タブで manifest が読め、インストール可能と表示される
 - [ ] **サーバーを止めてから再読み込みしても起動する**
 - [ ] 「きろく」→「データを のこす」→「いんさつ」で A4たての記録が出る
-- [ ] `APP_VERSION` を上げた（`sw.js` と `js/app.js` の両方）
+- [ ] `APP_VERSION` を上げた（`sw.js` と `js/app.js` の両方。`npm run check` が食いちがいを見ます）
+- [ ] `npm test` が通る
 
 ---
 
