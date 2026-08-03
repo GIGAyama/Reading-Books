@@ -11,14 +11,27 @@
  */
 
 const CACHE_PREFIX = 'reading-books-';
-const APP_VERSION = '2.3.0';
+const APP_VERSION = '2.4.0';
 const CACHE_STATIC = CACHE_PREFIX + 'static-' + APP_VERSION;
 const CACHE_RUNTIME = CACHE_PREFIX + 'runtime-v1';
 
-/* アプリシェル。オフラインでも起動できるように必ず先読みする。 */
+/* アプリシェル。オフラインでも起動できるように必ず先読みする。
+ *
+ * fonts/ の woff2（244ファイル・4.6MB）は、ここには入れない。
+ * unicode-range ごとに分かれていて、画面に出た文字のぶんだけ読まれる。
+ * 一度読まれたものは下の staleWhileRevalidate がキャッシュするので、
+ * 2回目からはオフラインでも同じ字体で出る。
+ * 全部先読みすると 校内Wi-Fi で 40人ぶんの 4.6MB が一斉に流れてしまう。
+ */
 const PRECACHE_URLS = [
   './',
   './index.html',
+  './offline.html',
+  './css/style.css',
+  './css/offline.css',
+  './js/pwa-early.js',
+  './js/app.js',
+  './js/offline.js',
   './studyLog.js',
   './manifest.json',
   './vendor/quagga.min.js',
@@ -41,17 +54,62 @@ const BYPASS_HOSTS = [
 /* Web フォントは stale-while-revalidate で持っておく */
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
+/**
+ * キャッシュに しまう前に 返事を 作りなおす。
+ *
+ * 【なぜ必要か】
+ * サーバー（GitHub Pages も含む）は HTML や JS を gzip / brotli で
+ * 縮めて送ってくる。fetch はそれを もどしてから 中身をくれるが、
+ * 「縮めてあります（Content-Encoding）」という ふだ だけは 返事に
+ * のこったままになる。
+ * その返事を そのまま Cache API に しまい、あとで オフライン時に
+ * ページとして 返すと、ブラウザは ふだ を信じて もういちど
+ * ほどこうとして 失敗し、まっ白な エラー画面になる。
+ * （このアプリが「オフラインにすると 起動しない」原因は これだった）
+ *
+ * そこで、中身は そのまま・ふだ だけ はずして しまい直す。
+ */
+async function stripEncodingHeaders(res) {
+  const headers = new Headers();
+  res.headers.forEach((value, key) => {
+    const k = key.toLowerCase();
+    if (k === 'content-encoding' || k === 'content-length' ||
+        k === 'transfer-encoding' || k === 'content-disposition') return;
+    headers.append(key, value);
+  });
+  const body = await res.clone().arrayBuffer();
+  return new Response(body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers: headers
+  });
+}
+
+/** 保存できる返事だけを キャッシュに しまう（失敗しても アプリは止めない） */
+async function cacheSafely(cache, key, res) {
+  try {
+    if (!res || !res.ok || res.type === 'opaque') return;
+    await cache.put(key, await stripEncodingHeaders(res));
+  } catch (err) {
+    console.warn('[sw] cache put skipped', key, err);
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_STATIC);
       // 1本でも失敗すると addAll 全体が落ちるため、個別に入れる
       await Promise.all(
-        PRECACHE_URLS.map((url) =>
-          cache.add(new Request(url, { cache: 'reload' })).catch((err) => {
+        PRECACHE_URLS.map(async (url) => {
+          try {
+            const res = await fetch(new Request(url, { cache: 'reload' }));
+            if (!res || !res.ok) throw new Error('status ' + (res && res.status));
+            await cache.put(url, await stripEncodingHeaders(res));
+          } catch (err) {
             console.warn('[sw] precache skipped', url, err);
-          })
-        )
+          }
+        })
       );
       await self.skipWaiting();
     })()
@@ -85,21 +143,40 @@ self.addEventListener('message', (event) => {
   }
 });
 
-/** ネットワーク優先（タイムアウト付き） */
-async function networkFirst(request, cacheName, timeoutMs) {
-  const cache = await caches.open(cacheName);
-  try {
-    const controller = new AbortController();
-    const timer = timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null;
-    const res = await fetch(request, { signal: controller.signal });
-    if (timer) clearTimeout(timer);
-    if (res && res.ok) cache.put(request, res.clone());
-    return res;
-  } catch (err) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    throw err;
-  }
+/** ネットワークへ取りにいく。指定の秒数で あきらめる。
+ *
+ *  fetch(request, { signal }) のように init を付けて呼ぶと、
+ *  ページ遷移(navigate)のリクエストは仕様上 same-origin モードに
+ *  作りかえられてしまう。ここでは request をそのまま渡し、
+ *  待ち時間の打ち切りは Promise.race で行う。 */
+function fetchWithTimeout(request, timeoutMs) {
+  const net = fetch(request);
+  if (!timeoutMs) return net;
+  return Promise.race([
+    net,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), timeoutMs))
+  ]);
+}
+
+/** キャッシュしてある アプリ本体（なければ オフライン案内）を返す */
+async function appShellFallback() {
+  /* caches.match には 相対パスの「文字列」を渡す。
+   *
+   * cache.match(request) のように Request を渡すと、サーバーが返す
+   * Vary: Accept-Encoding のせいで、先読みしたときと ページ遷移のときで
+   * Accept-Encoding が ちがうと 一致しない ことがある。
+   * それが原因で「オフラインにすると まったく起動しない」状態になっていた。 */
+  return (
+    (await caches.match('./index.html')) ||
+    (await caches.match('./')) ||
+    // アプリ本体すら取れないとき。アプリと同じ配色の案内ページを出す
+    (await caches.match('./offline.html')) ||
+    new Response('<h1>オフラインです</h1>', {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      status: 503
+    })
+  );
 }
 
 /** キャッシュ優先＋裏で更新 */
@@ -108,7 +185,9 @@ async function staleWhileRevalidate(request, cacheName) {
   const cached = await cache.match(request);
   const network = fetch(request)
     .then((res) => {
-      if (res && (res.ok || res.type === 'opaque')) cache.put(request, res.clone());
+      // opaque（別ドメインの返事）は 中身を読めないので そのまま入れる
+      if (res && res.type === 'opaque') cache.put(request, res.clone()).catch(() => {});
+      else cacheSafely(cache, request, res);
       return res;
     })
     .catch(() => undefined);
@@ -132,25 +211,33 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       (async () => {
+        // ① 先読み（navigation preload）の ぶんが 使えれば それを使う。
+        //    圏外だと「中身のない、失敗した返事」が返ってくることがあり、
+        //    それを そのまま画面に返すと ページが まっ白になる。
+        //    ちゃんと ok なときだけ 使う。
         try {
           const preload = await event.preloadResponse;
-          if (preload) {
+          if (preload && preload.ok) {
             const cache = await caches.open(CACHE_STATIC);
-            cache.put('./index.html', preload.clone());
+            cacheSafely(cache, './index.html', preload);
             return preload;
           }
-          return await networkFirst(request, CACHE_STATIC, 4000);
-        } catch (err) {
-          const cache = await caches.open(CACHE_STATIC);
-          return (
-            (await cache.match('./index.html')) ||
-            (await cache.match('./')) ||
-            new Response('<h1>オフラインです</h1>', {
-              headers: { 'Content-Type': 'text/html; charset=utf-8' },
-              status: 503
-            })
-          );
-        }
+        } catch (err) { /* 圏外。②へ */ }
+
+        // ② ネットワークへ（校内Wi-Fiが混んでいても 4秒で あきらめる）
+        try {
+          const res = await fetchWithTimeout(request, 4000);
+          if (res && res.ok) {
+            const cache = await caches.open(CACHE_STATIC);
+            cacheSafely(cache, './index.html', res);
+            return res;
+          }
+          // 404 などは そのまま見せる（サーバーは生きている）
+          if (res && res.status < 500) return res;
+        } catch (err) { /* 圏外・時間ぎれ。③へ */ }
+
+        // ③ キャッシュしてある アプリ本体
+        return appShellFallback();
       })()
     );
     return;
