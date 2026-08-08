@@ -12,7 +12,7 @@
    0. 定数
    ============================================================ */
 var APP_ID      = 'reading-books';   // 学習ログの appId（仕様書 §3.1）
-var APP_VERSION = '2.5.0';
+var APP_VERSION = '2.5.1';
 
 /* このアプリ専用の保存キー。
    `study.records.v1`（共通の学習ログ）は【ここに含めない】。
@@ -1416,7 +1416,15 @@ var Scanner = {
             area: { top: '22%', bottom: '22%', left: '6%', right: '6%' }
           },
           decoder: { readers: ['ean_reader'] },
-          frequency: 10, numOfWorkers: 2,
+          /* numOfWorkers は 0（はたらき手を つかわず、本体と同じ場所で よみとる）。
+             QuaggaJS は はたらき手を blob: の URL から 作るので、
+             CSP の worker-src 'self'（と そのもとの default-src 'self'）に はじかれる。
+             はじかれると init の しらせが 返ってこず、カメラの画面が
+             「カメラの じゅんびを しています…」から すすまなくなる。
+             ここを 通るのは BarcodeDetector を もたない きかい
+             （iPad・iPhone の Safari など）なので、そこで カメラが
+             ひらかなくなる。CSP を ゆるめる かわりに、はたらき手を つかわない。 */
+          frequency: 10, numOfWorkers: 0,
           locator: { patchSize: 'medium', halfSample: true }
         }, function (err) {
           if (err) { reject(err); return; }

@@ -11,7 +11,7 @@
  */
 
 const CACHE_PREFIX = 'reading-books-';
-const APP_VERSION = '2.5.0';
+const APP_VERSION = '2.5.1';
 const CACHE_STATIC = CACHE_PREFIX + 'static-' + APP_VERSION;
 const CACHE_RUNTIME = CACHE_PREFIX + 'runtime-v1';
 

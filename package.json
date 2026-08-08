@@ -1,6 +1,6 @@
 {
   "name": "reading-books",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "private": true,
   "description": "どくしょ ちょきんばこ — よんだ本を バーコードで きろくして、さつ数・ページ数・きんがくを ためていく どくしょノート",
   "license": "MIT",
