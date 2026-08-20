@@ -12,7 +12,7 @@
  */
 
 const CACHE_PREFIX = 'reading-books-';
-const APP_VERSION = '2.5.2';
+const APP_VERSION = '2.6.0';
 const CACHE_STATIC = CACHE_PREFIX + 'static-' + APP_VERSION;
 const CACHE_RUNTIME = CACHE_PREFIX + 'runtime-v1';
 
@@ -34,6 +34,8 @@ const PRECACHE_URLS = [
   './js/app.js',
   './js/offline.js',
   './studyLog.js',
+  './records-export.html',
+  './js/records-export.js',
   './manifest.json',
   './vendor/quagga.min.js',
   './icons/icon.svg',

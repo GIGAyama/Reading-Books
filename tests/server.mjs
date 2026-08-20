@@ -27,7 +27,11 @@ const TYPES = {
   '.ico':  'image/x-icon'
 };
 
-export const BASE_PATH = '/Reading-Books/';
+// 本番と同じ「ドメイン直下」で配る。
+// 専用ドメイン reading-books.giga-school.com ではアプリがドメイン直下に
+// 置かれるので、ここを旧構成の '/Reading-Books/' にすると、
+// 本番では 404 になるパスがテスト環境でだけ通ってしまう。
+export const BASE_PATH = '/';
 
 export async function startServer(root, port = 0) {
   const server = createServer(async (req, res) => {
