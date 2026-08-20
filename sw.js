@@ -3,15 +3,16 @@
  *
  * 【重要】activate では自アプリ以外のキャッシュを削除しない。
  *   （学習ログ共通スキーマ仕様書 study.v1 §1.2 禁止事項）
- *   gigayama.github.io は複数アプリで同一オリジンを共有しているため、
- *   CACHE_PREFIX で始まるキャッシュだけを掃除する。
+ *   いまは reading-books.giga-school.com の専用ドメインだが、
+ *   共有オリジン（gigayama.github.io）へ戻す・持っていく場合にそなえて、
+ *   CACHE_PREFIX で始まるキャッシュだけを掃除する作法は変えない。
  *
  * また Service Worker は localStorage を操作しない。
  * `study.records.v1` を含む学習データに一切触れない。
  */
 
 const CACHE_PREFIX = 'reading-books-';
-const APP_VERSION = '2.5.1';
+const APP_VERSION = '2.5.2';
 const CACHE_STATIC = CACHE_PREFIX + 'static-' + APP_VERSION;
 const CACHE_RUNTIME = CACHE_PREFIX + 'runtime-v1';
 
