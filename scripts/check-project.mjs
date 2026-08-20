@@ -255,11 +255,13 @@ else warn('D11', '提示モードがない');
    E. PWA
    ============================================================ */
 const mf = JSON.parse(read(cfg.manifest));
-const wantPrefix = '/' + cfg.repoName + '/';
+/* 公開の置き場所。専用ドメインの直下なら "/"、
+   gigayama.github.io のような共有オリジンなら "/リポジトリ名/"。 */
+const wantPrefix = cfg.basePath || ('/' + cfg.repoName + '/');
 for (const key of ['id', 'scope', 'start_url']) {
   const v = String(mf[key] || '');
   v.startsWith(wantPrefix) ? ok('E1', `manifest.${key} が絶対パス`, v)
-                           : fail('E1', `manifest.${key} がリポジトリ名の絶対パスでない`, v || '(未設定)');
+                           : fail('E1', `manifest.${key} が ${wantPrefix} から始まる絶対パスでない`, v || '(未設定)');
 }
 const purposes = (mf.icons || []).map((i) => `${i.sizes}:${i.purpose || 'any'}`);
 for (const need of ['192x192:any', '512x512:any', '192x192:maskable', '512x512:maskable']) {

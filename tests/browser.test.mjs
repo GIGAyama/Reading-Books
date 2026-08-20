@@ -14,7 +14,7 @@
  *   5. 印刷シートが A4 で組み立てられるか
  *   6. maskable アイコンの絵が 中央80%（セーフゾーン）に収まっているか
  *   7. サーバーを本当に止めても アプリが起動するか  ← いちばん大事
- *   8. manifest の id/scope/start_url が絶対パスか
+ *   8. manifest の id/scope/start_url が公開の置き場所から始まる絶対パスか
  *
  * 7 は、以前「Content-Encoding を落とさずにキャッシュしていたせいで
  * 圏外だと まっ白なエラー画面になる」不具合があったところ。
@@ -384,8 +384,13 @@ for (const [w, h, label] of [
 {
   const { readFile } = await import('node:fs/promises');
   const mf = JSON.parse(await readFile(join(ROOT, 'manifest.json'), 'utf8'));
-  const okAbs = ['id', 'scope', 'start_url'].every((k) => String(mf[k] || '').startsWith('/Reading-Books/'));
-  check(okAbs, 'manifest の id/scope/start_url がリポジトリ名の絶対パス',
+  const cfg = JSON.parse(await readFile(join(ROOT, 'quality.config.json'), 'utf8'));
+  /* 公開の置き場所。専用ドメインの直下なら "/"、共有オリジンなら "/リポジトリ名/"。
+     ここが公開URLとずれていると、開いているページが scope の外になり、
+     manifest ごと無視されて PWA として起動しなくなる。 */
+  const base = cfg.basePath || ('/' + cfg.repoName + '/');
+  const okAbs = ['id', 'scope', 'start_url'].every((k) => String(mf[k] || '').startsWith(base));
+  check(okAbs, `manifest の id/scope/start_url が ${base} から始まる絶対パス`,
     `${mf.id} / ${mf.scope} / ${mf.start_url}`);
 }
 
