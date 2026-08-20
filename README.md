@@ -248,14 +248,29 @@ reading_record_main_v1_meta    お祝い済みの月・音の設定
 ### 記録は「まなびクエスト」へ送れます
 
 このアプリは**保存だけ**を行い、外部への送信は一切しません。送信するのは、
-`gigayama.github.io` に置かれた**学習ポータル**（`Gamification/manabi-portal/`）です。
+`gamification.giga-school.com` に置かれた**学習ポータル**（`Gamification/manabi-portal/`）です。
 
-> ⚠️ **専用ドメインへ移したことによる注意**
-> 学習ログ（`study.records.v1`）は `localStorage` に入るため、**オリジン（ドメイン）ごとに
-> 別々**です。このアプリが `reading-books.giga-school.com` に移ったことで、保存先は
-> `gigayama.github.io` の学習ポータルからは**見えなくなりました**。ポータルへ送るしくみを
-> 続けるには、ポータルを同じドメインへ移すか、アプリ側からポータルへ渡すしくみ
-> （`postMessage` など）を別途つくる必要があります。
+#### 専用ドメインへ移したあと、どうやってポータルへ渡しているか
+
+学習ログ（`study.records.v1`）は `localStorage` に入るため、**オリジン（ドメイン）ごとに
+別々**です。このアプリが `reading-books.giga-school.com` へ移ったことで、
+ポータルが自分の `localStorage` を読むだけでは、この記録は見えなくなりました。
+
+そこで、**読み取り専用の受け渡し口**を置いています。
+
+| ファイル | 役割 |
+|---|---|
+| `records-export.html` | 受け渡し口のページ（児童が開く画面ではない） |
+| `js/records-export.js` | `study.records.v1` を読んで `postMessage` で返す |
+
+ポータルがこのページを**同一サイトの `iframe`** で開き、`postMessage` で問い合わせます。
+サブドメイン同士は同一サイト（eTLD+1 が `giga-school.com`）なので、ブラウザの
+third-party ストレージ分割の対象にならず、`iframe` の中でも第一者と同じ
+`localStorage` が見えます。
+
+- **読むだけ。書き込みも削除もしません。** 集計側の不具合でこのアプリの記録が
+  壊れることが、原理的に起きない形にしてあります
+- 渡す相手は `giga-school.com` とそのサブドメインだけです
 ポータルの「きろくを おくる」を押すと、端末にたまった学習ログが
 **まなびクエスト**（学習記録・ゲーミフィケーションのアプリ）へ届きます。
 
