@@ -1,6 +1,5 @@
 {
   "appName": "どくしょ ちょきんばこ",
-  "repoName": "Reading-Books",
   "_comment_basePath": "公開URLの中で、このアプリの置き場所を表すパス。専用ドメイン（reading-books.giga-school.com）の直下に置いているので \"/\"。gigayama.github.io のように1つのオリジンを複数アプリで共有する場合は \"/リポジトリ名/\" にする。manifest の id / scope / start_url はここから始まっていなければならない。",
   "basePath": "/",
   "type": "A",
@@ -114,5 +113,16 @@
       "check": "lock-service",
       "reason": "同上。"
     }
-  ]
+  ],
+  "standard": {
+    "repoName": "Reading-Books",
+    "sw": "static",
+    "skips": [
+      {
+        "id": "E_OFFLINE_HTML",
+        "reason": "offline.html は offline.js / offline.css ごと先読みしており、再試行ボタンをスクリプトで実装する設計"
+      }
+    ],
+    "manifest": "manifest.json"
+  }
 }
