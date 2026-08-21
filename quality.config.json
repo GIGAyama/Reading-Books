@@ -95,10 +95,6 @@
       }
     ]
   },
-  "appVersionFiles": [
-    "sw.js",
-    "js/app.js"
-  ],
   "securityExceptions": [
     {
       "rule": "csp-meta-frame-ancestors-missing",
