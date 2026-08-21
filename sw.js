@@ -114,7 +114,11 @@ self.addEventListener('install', (event) => {
           }
         })
       );
-      await self.skipWaiting();
+      // ここでは skipWaiting しない。児童が読んでいる最中に画面が突然
+      // 入れ替わるのを避けるため、切り替えは画面側の「さいしんに する」から
+      // SKIP_WAITING メッセージが届いたときだけ行う（下の message を参照）。
+      // 以前はここで待たずに切り替えていたため、message 側の受け口も
+      // 画面側の更新の案内も、一度も使われない死にコードになっていた。
     })()
   );
 });
