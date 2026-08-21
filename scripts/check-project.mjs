@@ -302,14 +302,18 @@ sw.split('\n').some((l) => /localStorage/.test(l) && !/^\s*[*/]/.test(l))
   ? ok('E7', '更新通知のしくみがある')
   : fail('E7', '更新通知がない');
 
-// E9 APP_VERSION が全ファイルで一致
-const versions = cfg.appVersionFiles.map((f) => {
-  const m = read(f).match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
-  return { f, v: m ? m[1] : null };
-});
-const uniq = [...new Set(versions.map((x) => x.v))];
-if (uniq.length === 1 && uniq[0]) ok('E9', 'APP_VERSION が一致', uniq[0]);
-else fail('E9', 'APP_VERSION が食いちがっている', versions.map((x) => `${x.f}=${x.v}`).join(' '));
+// E9 sw.js の版が自動生成されている
+// かつては sw.js と js/app.js の APP_VERSION 一致を見ていたが、手書きの版は
+// 2026-08-21 に全リポジトリで同時に上げ忘れる事故を起こした。いまは
+// tools/build-sw.mjs が先読み対象の中身から版を作る（CI の --check がずれを止める）。
+// js/app.js の APP_VERSION は児童向け表示とエクスポートの記録用で、別物として残る。
+const swVersionLine = read('sw.js').match(/const APP_VERSION = '([^']*)'; \/\* __APP_VERSION__ \*\//);
+if (has('tools/build-sw.mjs') && swVersionLine
+    && swVersionLine[1] !== 'v0' && swVersionLine[1] !== 'dev') {
+  ok('E9', 'SW の版が自動生成の形', swVersionLine[1]);
+} else {
+  fail('E9', 'sw.js の版が自動生成の形（__APP_VERSION__ の目印つき・tools/build-sw.mjs あり）になっていない');
+}
 
 /* ============================================================
    F. 性能

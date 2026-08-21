@@ -29,6 +29,7 @@
   worker-src 'self';
   manifest-src 'self';
   connect-src 'self' https://api.openbd.jp https://www.googleapis.com https://ndlsearch.ndl.go.jp;
+  frame-src 'self' https://gamification.giga-school.com;
   base-uri 'self';
   form-action 'none';
   object-src 'none'">
@@ -491,5 +492,7 @@
 <!-- 学習ログ共通モジュール（全アプリ共通・不変） -->
 <script src="studyLog.js"></script>
 <script src="js/app.js"></script>
+<!-- 学習ログを記録ハブ（まなびクエスト）へ写す。読むだけで、このアプリの記録には触れない -->
+<script src="./js/records-hub-client.js" defer></script>
 </body>
 </html>

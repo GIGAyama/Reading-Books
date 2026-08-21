@@ -9,7 +9,9 @@
     "node": ">=18"
   },
   "scripts": {
-    "check": "node scripts/check-project.mjs",
+    "check": "node tools/build-sw.mjs --check && node scripts/check-project.mjs",
+    "build:sw": "node tools/build-sw.mjs",
+    "test:records": "node --test tests/records-export.test.mjs",
     "test": "npm run check && npm run test:browser",
     "test:browser": "node tests/browser.test.mjs",
     "serve": "node -e \"import('./tests/server.mjs').then(m=>m.startServer(process.cwd(),8099).then(s=>console.log('→ '+s.url)))\""
