@@ -9,7 +9,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "check": "node tools/build-sw.mjs --check && node scripts/check-project.mjs",
+    "check": "node scripts/check-standard.mjs && node tools/build-sw.mjs --check && node scripts/check-project.mjs",
     "build:sw": "node tools/build-sw.mjs",
     "test:records": "node --test tests/records-export.test.mjs",
     "test": "npm run check && npm run test:browser",
