@@ -1986,7 +1986,15 @@ function showUpdateBar(waitingSW) {
 }
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
+  /* ⚠️ load を まつだけでは たりない。
+     この app.js が おそく よみこまれたり、もどるボタンで ページが
+     よみがえったり すると、load は もう おわって いる。
+     その ときは listener が 二度と よばれず、Service Worker が
+     しずかに 登録されない（エラーも 出ない）。
+     オフラインで ひらけない・更新の おしらせが 出ない、という形で
+     あとから 気づくことに なる。
+     だから「もう おわって いるか」を 見て わける。 */
+  function bootServiceWorker() {
     /* はじめて ひらいたときは Service Worker が あとから うけもつ（claim）ため
        controllerchange が おきる。ここで よみこみ直すと、入力中の ないようが
        きえてしまう。よみこみ直すのは「まえから うけもたれていた＝更新」のときだけ。 */
@@ -2013,7 +2021,10 @@ if ('serviceWorker' in navigator) {
       reloaded = true;
       location.reload();
     });
-  });
+  }
+
+  if (document.readyState === 'complete') bootServiceWorker();
+  else window.addEventListener('load', bootServiceWorker);
 }
 
 /* ============================================================
