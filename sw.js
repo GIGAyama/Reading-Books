@@ -13,7 +13,7 @@
 
 const CACHE_PREFIX = 'reading-books-';
 // APP_VERSION は tools/build-sw.mjs が先読み対象の中身から自動生成する。手で書き換えない。
-const APP_VERSION = 'vad0a2e0e'; /* __APP_VERSION__ */
+const APP_VERSION = 'v6a9e9e62'; /* __APP_VERSION__ */
 const CACHE_STATIC = CACHE_PREFIX + 'static-' + APP_VERSION;
 const CACHE_RUNTIME = CACHE_PREFIX + 'runtime-v1';
 
