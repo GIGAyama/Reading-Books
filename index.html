@@ -203,8 +203,8 @@
           </div>
         </div>
 
-        <p class="muted tiny center">©2026 どくしょ ちょきんばこ／ＩＣＴ支援の杜<br>
-          <a href="https://giga-school.com/apps/reading-books/" target="_blank" rel="noopener">使い方を読む</a></p>
+        <p class="app-foot muted tiny center"><span class="credit">©2026 どくしょ ちょきんばこ／ＩＣＴ支援の杜</span><span
+          data-giga-links data-links="terms,privacy"></span></p>
       </div>
     </section>
 
@@ -495,5 +495,11 @@
 <script src="js/app.js"></script>
 <!-- 学習ログを記録ハブ（まなびクエスト）へ写す。読むだけで、このアプリの記録には触れない -->
 <script src="./js/records-hub-client.js" defer></script>
+
+<!-- 利用規約・プライバシーへの行き先。中身は正本の部品
+     standards/web/giga-app-links.js（配布物 giga-app-links.js）が、
+     ホームの下にある <span data-giga-links> の中に出す。
+     data-links は置き場所の側に書いてある。 -->
+<script src="./giga-app-links.js" defer></script>
 </body>
 </html>
