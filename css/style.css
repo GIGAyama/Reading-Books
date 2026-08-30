@@ -505,6 +505,15 @@ ul{padding:0;list-style:none}
    画面のはばに応じて 12〜13px まで のびるようにした。 */
 .tiny{font-size:clamp(12px, 0.3vw + 11px, 13px);line-height:var(--lh-read)}
 .center{text-align:center}
+/* ホームのいちばん下。クレジットと、利用規約・プライバシーへの行き先を
+   1 行に収める。狭い画面でも 2 行にしない（本文の場所をそのぶん奪うため）。
+   幅が足りなくなったら「切るのはクレジットのほう」。行き先は必ず残す。
+   アプリの画面から利用規約とプライバシーへ辿れるのは、ここだけしかない。
+   ⚠️ min-width:0 を落とさないこと。中の行き先が折り返さない（nowrap）ので、
+      これが無いと最小幅がこの段の幅を押し広げ、画面ごと横に溢れる。 */
+.app-foot{display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;
+  gap:6px;min-width:0;max-inline-size:100%}
+.app-foot .credit{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row{display:flex;align-items:center;gap:8px}
 .row.wrap{flex-wrap:wrap}
 .spacer{flex:1}

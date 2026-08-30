@@ -40,6 +40,10 @@
       "local": "scripts/check-standard.mjs"
     },
     {
+      "canonical": "web/giga-app-links.js",
+      "local": "giga-app-links.js"
+    },
+    {
       "canonical": "agents/rules/gigaschool-standards.md",
       "local": ".agents/rules/gigaschool-standards.md"
     },

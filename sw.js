@@ -13,7 +13,7 @@
 
 const CACHE_PREFIX = 'reading-books-';
 // APP_VERSION は tools/build-sw.mjs が先読み対象の中身から自動生成する。手で書き換えない。
-const APP_VERSION = 'vea04d8a2'; /* __APP_VERSION__ */
+const APP_VERSION = 'v33cf5e06'; /* __APP_VERSION__ */
 const CACHE_STATIC = CACHE_PREFIX + 'static-' + APP_VERSION;
 const CACHE_RUNTIME = CACHE_PREFIX + 'runtime-v1';
 
@@ -38,6 +38,7 @@ const PRECACHE_URLS = [
   './records-export.html',
   './js/records-export.js',
   './js/records-hub-client.js',
+  './giga-app-links.js',
   './manifest.json',
   './vendor/quagga.min.js',
   './icons/icon.svg',

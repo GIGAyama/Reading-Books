@@ -52,8 +52,17 @@ const files = walk(ROOT).map((p) => relative(ROOT, p));
    ・scripts/ … この検査スクリプト自身。禁止パターンの正規表現を持っているので
                 そのまま数えると いつも自分に ひっかかる
    ・vendor/  … 同梱の第三者ライブラリ（QuaggaJS）。書きかえない前提のもの
+   ・.claude/skills/ と .agents/skills/ … 正本から配られた検査の道具と、その
+                試験用の資料。scripts/ とまったく同じ理由で外す。
+                giga-reviewer の lint-giga は「外部 CDN を見つける道具」なので、
+                探す相手のホスト名（unpkg.com など）を自分の中に持っている。
+                それを数えると、道具を配った 42 本すべてが赤くなる。
+                実際 2026-08-28 の正本配布から、このリポジトリの CI は
+                その 1 件だけで赤いまま止まっていた。
    大きさの検査（F4）は vendor も含めて見るので、別のリストを使う。 */
-const isOurs = (f) => !f.startsWith('scripts' + sep) && !f.startsWith('vendor' + sep);
+const AGENT_DIRS = ['.claude' + sep + 'skills' + sep, '.agents' + sep + 'skills' + sep];
+const isOurs = (f) => !f.startsWith('scripts' + sep) && !f.startsWith('vendor' + sep)
+                   && !AGENT_DIRS.some((d) => f.startsWith(d));
 const codeLike = (f) => /\.(js|mjs|jsx|gs|html|css)$/.test(f);
 const sources = files.filter((f) => codeLike(f) && isOurs(f));
 const sourcesAll = files.filter(codeLike);
