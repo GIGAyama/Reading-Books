@@ -42,9 +42,15 @@ const check = (cond, label, detail = '') => {
  * 固定の日付にすると 月が変わったとたんに 1冊も出なくなり、
  * 本の行・★・かんそう を まったく検査しないまま ✅ になってしまう。 */
 const TODAY = Date.now();
+/* ⚠️ 「2日前」も “この月” の中に収めること。
+   毎月 1日・2日は 2日前が先月に落ちる。リストは この月だけを出すので
+   1冊しか並ばず、ここが ❌ になる（2026-09-02 に実測。main も同じ日に赤くなった）。
+   月をまたぐときは その月の はじめ に寄せる（きょうより先には しない）。 */
+const MONTH_START = (() => { const d = new Date(TODAY); return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); })();
+const EARLIER = Math.min(Math.max(TODAY - 2 * 86400000, MONTH_START), TODAY);
 const SAMPLE = [
   { id: 'a', title: 'ぐりとぐら', author: 'なかがわりえこ', pages: 28, price: 990, rating: 5,
-    memo: 'たまごの ケーキが おいしそうだった', isbn: '', timestamp: TODAY - 2 * 86400000 },
+    memo: 'たまごの ケーキが おいしそうだった', isbn: '', timestamp: EARLIER },
   { id: 'b', title: 'モモ', author: 'ミヒャエル・エンデ', pages: 400, price: 880, rating: 3,
     memo: '', isbn: '', timestamp: TODAY }
 ];
